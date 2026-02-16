@@ -165,14 +165,14 @@ class LandingScreen extends StatelessWidget {
     if (Breakpoints.isMobile(context)) {
       // Single column on mobile - wider cards, less tall
       crossAxisCount = screenWidth < 400 ? 1 : 2;
-      childAspectRatio = screenWidth < 400 ? 0.9 : 0.7;
+      childAspectRatio = screenWidth < 400 ? 0.85 : 0.65;
     } else if (Breakpoints.isTablet(context)) {
       // 2-3 columns on tablet depending on width
       crossAxisCount = screenWidth < 900 ? 2 : 3;
-      childAspectRatio = 0.75;
+      childAspectRatio = 0.68;
     } else {
       crossAxisCount = 4;
-      childAspectRatio = 0.75;
+      childAspectRatio = 0.68;
     }
 
     return GridView.builder(

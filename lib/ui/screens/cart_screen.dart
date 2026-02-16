@@ -4,6 +4,7 @@ import '../../core/typography.dart';
 import '../../core/breakpoints.dart';
 import '../../core/constants/merch_config.dart';
 import '../../backend/services/cart_service.dart';
+import '../../backend/domain/models/cart_item.dart';
 import '../../backend/data/auth_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
@@ -28,59 +29,40 @@ class CartScreen extends StatelessWidget {
         ),
       ),
       body: AnimatedStarfield(
-        child: ValueListenableBuilder(
+        child: ValueListenableBuilder<List<CartItem>>(
           valueListenable: CartService().cartItemsNotifier,
           builder: (context, items, _) {
             if (items.isEmpty) {
               return _buildEmptyCart(context);
             }
 
-            return Scrollbar(
-              thickness: 6,
-              radius: const Radius.circular(3),
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                child: CustomScrollView(
-                  slivers: [
-                  // Cart items list
-                  SliverPadding(
+            return Column(
+              children: [
+                // Scrollable cart items list
+                Expanded(
+                  child: ListView.builder(
                     padding: EdgeInsets.fromLTRB(
                       Breakpoints.isMobile(context) ? 12 : 16,
                       Breakpoints.isMobile(context) ? 12 : 16,
-                      Breakpoints.isMobile(context) ? 6 : 10,
+                      Breakpoints.isMobile(context) ? 12 : 16,
                       Breakpoints.isMobile(context) ? 12 : 16,
                     ),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final cartItem = items[index];
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 700),
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 6),
-                                child: _CartItemCard(cartItem: cartItem),
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: items.length,
-                      ),
-                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final cartItem = items[index];
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 700),
+                          child: _CartItemCard(cartItem: cartItem),
+                        ),
+                      );
+                    },
                   ),
+                ),
 
-                  // Push cart summary to bottom
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    fillOverscroll: true,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: _buildCartSummary(context, items.length),
-                    ),
-                  ),
-                ],
-              ),
-              ),
+                // Fixed cart summary at bottom
+                _buildCartSummary(context, items.length),
+              ],
             );
           },
         ),
@@ -126,13 +108,13 @@ class CartScreen extends StatelessWidget {
         gradient: AppTheme.cardBackgroundGradient,
         border: Border(
           top: BorderSide(
-            color: AppTheme.cyanAccent.withOpacity(0.3),
+            color: AppTheme.cyanAccent.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.cyanAccent.withOpacity(0.2),
+            color: AppTheme.cyanAccent.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -144,10 +126,10 @@ class CartScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Your balance
-            ValueListenableBuilder(
+            ValueListenableBuilder<int>(
               valueListenable: AuthService().xpNotifier,
               builder: (context, xp, _) {
-                return ValueListenableBuilder(
+                return ValueListenableBuilder<int>(
                   valueListenable: AuthService().coinsNotifier,
                   builder: (context, coins, _) {
                     return Row(
@@ -226,7 +208,7 @@ class CartScreen extends StatelessWidget {
 
   void _handleCheckout(BuildContext context) {
     // Check if user is logged in
-    if (!AuthService().isLoggedIn) {
+    if (!AuthService().isLoggedInNotifier.value) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -244,7 +226,7 @@ class CartScreen extends StatelessWidget {
 
 /// Individual cart item card with quantity controls
 class _CartItemCard extends StatelessWidget {
-  final dynamic cartItem;
+  final CartItem cartItem;
 
   const _CartItemCard({required this.cartItem});
 
@@ -263,7 +245,7 @@ class _CartItemCard extends StatelessWidget {
         gradient: AppTheme.cardBackgroundGradient,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.cyanAccent.withOpacity(0.3),
+          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -320,7 +302,7 @@ class _CartItemCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              '${cartItem.item.coinPrice} × ${cartItem.quantity} = ${cartItem.subtotal}',
+                              '${cartItem.item.coinPrice} \u00d7 ${cartItem.quantity} = ${cartItem.subtotal}',
                               style: AppTypography.body(context).copyWith(
                                 color: AppTheme.yellowPrimary,
                               ),
