@@ -28,7 +28,14 @@ class AuthService {
   final ValueNotifier<bool> isLoggedInNotifier = ValueNotifier(false);
 
   // Getters
-  bool get isLoggedIn => _supabase.auth.currentUser != null;
+  bool get isLoggedIn {
+    try {
+      return _supabase.auth.currentUser != null;
+    } catch (e) {
+      debugPrint('AuthService: isLoggedIn check failed: $e');
+      return isLoggedInNotifier.value;
+    }
+  }
   String? get userId => _userId;
   String? get username => _username;
   String? get email => _email;
@@ -125,8 +132,8 @@ class AuthService {
 
     _userId = response['player_id'] as String;
     _username = response['username'] as String;
-    _xp = response['xp'] as int;
-    _coins = response['coins'] as int;
+    _xp = (response['xp'] as int?) ?? 0;
+    _coins = (response['coins'] as int?) ?? 0;
 
     // Get email from auth.users
     _email = _supabase.auth.currentUser?.email;

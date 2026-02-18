@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../backend/domain/models/merch_item.dart';
 import '../../core/theme.dart';
@@ -10,6 +11,7 @@ import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
+import 'login_screen.dart';
 import 'order_history_screen.dart';
 
 /// Item detail screen with size selector for shirts
@@ -26,6 +28,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   String? _selectedSize;
 
   void _addToCart() {
+    // Require login before adding to cart
+    if (!AuthService().isLoggedInNotifier.value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to add items to your cart'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
+
     if (widget.item.requiresSize && _selectedSize == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -36,15 +53,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       return;
     }
 
-    CartService().addItem(widget.item, size: _selectedSize);
+    try {
+      CartService().addItem(widget.item, size: _selectedSize);
+      debugPrint('CartService: items after add: ${CartService().items.length}');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.item.name} added to cart!'),
-        backgroundColor: AppTheme.greenPrimary,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${widget.item.name} added to cart!'),
+          backgroundColor: AppTheme.greenPrimary,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('_addToCart error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding to cart: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -53,11 +82,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       appBar: MerchNavBar(
         title: widget.item.name,
         isSubPage: true,
-        onCartTap: () => Navigator.pushReplacement(
+        onCartTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const CartScreen()),
         ),
-        onOrdersTap: () => Navigator.pushReplacement(
+        onOrdersTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
         ),
