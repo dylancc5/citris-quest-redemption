@@ -67,7 +67,7 @@ class MerchItemCard extends StatelessWidget {
 
             // Content
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
@@ -116,50 +116,61 @@ class MerchItemCard extends StatelessWidget {
                       ],
                     ),
 
-                    // Progress bar (only when logged in)
+                    // Progress bars (only when logged in)
                     ValueListenableBuilder<bool>(
                       valueListenable: AuthService().isLoggedInNotifier,
                       builder: (context, isLoggedIn, _) {
                         if (!isLoggedIn) return const SizedBox.shrink();
 
                         return ValueListenableBuilder<int>(
-                          valueListenable: AuthService().coinsNotifier,
-                          builder: (context, coins, _) {
-                            final progress = (coins / item.coinPrice).clamp(0.0, 1.0);
-                            final hasEnough = coins >= item.coinPrice;
+                          valueListenable: AuthService().xpNotifier,
+                          builder: (context, xp, _) {
+                            return ValueListenableBuilder<int>(
+                              valueListenable: AuthService().coinsNotifier,
+                              builder: (context, coins, _) {
+                                final xpThreshold = MerchConfig.xpGateThreshold;
+                                final xpProgress = (xp / xpThreshold).clamp(0.0, 1.0);
+                                final hasEnoughXp = xp >= xpThreshold;
+                                final coinProgress = (coins / item.coinPrice).clamp(0.0, 1.0);
+                                final hasEnoughCoins = coins >= item.coinPrice;
 
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Column(
-                                children: [
-                                  // Progress bar
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: progress,
-                                      minHeight: 6,
-                                      backgroundColor: AppTheme.backgroundSecondary,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        hasEnough
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Column(
+                                    children: [
+                                      // XP progress bar
+                                      _buildProgressBar(
+                                        context,
+                                        label: hasEnoughXp
+                                            ? 'XP unlocked!'
+                                            : '$xp / $xpThreshold XP',
+                                        progress: xpProgress,
+                                        barColor: hasEnoughXp
                                             ? AppTheme.greenPrimary
-                                            : accentColor,
+                                            : AppTheme.cyanAccent,
+                                        labelColor: hasEnoughXp
+                                            ? AppTheme.greenPrimary
+                                            : Colors.white54,
                                       ),
-                                    ),
+                                      const SizedBox(height: 4),
+                                      // Coins progress bar
+                                      _buildProgressBar(
+                                        context,
+                                        label: hasEnoughCoins
+                                            ? 'Ready to redeem!'
+                                            : '$coins / ${item.coinPrice} coins',
+                                        progress: coinProgress,
+                                        barColor: hasEnoughCoins
+                                            ? AppTheme.greenPrimary
+                                            : AppTheme.yellowPrimary,
+                                        labelColor: hasEnoughCoins
+                                            ? AppTheme.greenPrimary
+                                            : Colors.white54,
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 2),
-                                  // Progress label
-                                  Text(
-                                    hasEnough
-                                        ? 'Ready to redeem!'
-                                        : '$coins / ${item.coinPrice}',
-                                    style: AppTypography.caption2(context).copyWith(
-                                      color: hasEnough
-                                          ? AppTheme.greenPrimary
-                                          : Colors.white54,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
                             );
                           },
                         );
@@ -173,6 +184,35 @@ class MerchItemCard extends StatelessWidget {
         ),
       ),
       ),
+    );
+  }
+
+  Widget _buildProgressBar(
+    BuildContext context, {
+    required String label,
+    required double progress,
+    required Color barColor,
+    required Color labelColor,
+  }) {
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: AppTheme.backgroundSecondary,
+            valueColor: AlwaysStoppedAnimation<Color>(barColor),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTypography.caption2(context).copyWith(
+            color: labelColor,
+          ),
+        ),
+      ],
     );
   }
 }
