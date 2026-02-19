@@ -3,12 +3,13 @@ import '../../core/theme.dart';
 import '../../core/typography.dart';
 import '../../core/breakpoints.dart';
 import '../../backend/domain/models/shipping_address.dart';
-import '../../backend/data/auth_service.dart';
 import '../../backend/services/cart_service.dart';
 import '../../backend/services/validation_service.dart';
 import '../../backend/services/order_processing_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
+import '../../widgets/common/balance_display.dart';
+import '../../painters/space_invader_painter.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
 import 'order_history_screen.dart';
@@ -199,7 +200,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
         ),
       ),
-      body: AnimatedStarfield(
+      body: Stack(
+        children: [
+          AnimatedStarfield(
         child: Scrollbar(
           controller: _scrollController,
           thickness: 6,
@@ -226,7 +229,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Order summary card
+                          // Step indicator
+                          _buildStepIndicator(),
+                          const SizedBox(height: 24),
+
+                          // Order summary card (collapsible)
                           _buildOrderSummary(),
                           const SizedBox(height: 24),
 
@@ -252,10 +259,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
+                              color: Colors.orange.withValues(alpha:0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Colors.orange.withOpacity(0.3),
+                                color: Colors.orange.withValues(alpha:0.3),
                               ),
                             ),
                             child: Row(
@@ -280,6 +287,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 : 'Confirm Order',
                             onPressed: _isProcessing ? null : _processOrder,
                           ),
+                          const SizedBox(height: 16),
+
+                          // Back to cart button
+                          TextButton.icon(
+                            onPressed: () => Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const CartScreen()),
+                            ),
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text('Back to Cart'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.cyanAccent,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -288,6 +309,107 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
           ),
+        ),
+          ),
+          // Loading overlay
+          if (_isProcessing) _buildLoadingOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator() {
+    return Row(
+      children: [
+        _buildStep(1, 'Review', true),
+        _buildStepDivider(),
+        _buildStep(2, 'Address', true),
+        _buildStepDivider(),
+        _buildStep(3, 'Confirm', false),
+      ],
+    );
+  }
+
+  Widget _buildStep(int number, String label, bool isCompleted) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCompleted
+                  ? AppTheme.cyanAccent
+                  : AppTheme.backgroundSecondary,
+              border: Border.all(
+                color: AppTheme.cyanAccent,
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '$number',
+                style: AppTypography.body(context).copyWith(
+                  color: isCompleted ? AppTheme.backgroundPrimary : AppTheme.cyanAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: AppTypography.caption1(context).copyWith(
+              color: isCompleted ? AppTheme.cyanAccent : Colors.white54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepDivider() {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.cyanAccent,
+              AppTheme.backgroundSecondary,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black87,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 120,
+              height: 100,
+              child: CustomPaint(
+                painter: SpaceInvaderPainter(color: AppTheme.cyanAccent),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Processing your order...',
+              style: AppTypography.title2(context).copyWith(
+                color: AppTheme.cyanAccent,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
+          ],
         ),
       ),
     );
@@ -298,123 +420,86 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final totalCost = CartService().totalCost;
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: AppTheme.cardBackgroundGradient,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.cyanAccent.withOpacity(0.3),
+          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Order Summary', style: AppTypography.title2(context)),
-          const SizedBox(height: 16),
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${item.item.name}${item.selectedSize != null ? ' (${item.selectedSize})' : ''} × ${item.quantity}',
-                      style: AppTypography.body(context),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.monetization_on,
-                        color: AppTheme.yellowPrimary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${item.subtotal}',
-                        style: AppTypography.body(
-                          context,
-                        ).copyWith(color: AppTheme.yellowPrimary),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Divider(height: 24),
-          Row(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.all(16),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total', style: AppTypography.title2(context)),
+              Text('Order Summary', style: AppTypography.title2(context)),
               Row(
                 children: [
-                  Icon(Icons.monetization_on, color: AppTheme.yellowPrimary),
+                  Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '$totalCost',
-                    style: AppTypography.title1(
-                      context,
-                    ).copyWith(color: AppTheme.yellowPrimary),
+                    style: AppTypography.title2(context).copyWith(
+                      color: AppTheme.yellowPrimary,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const Divider(height: 24),
-          ValueListenableBuilder(
-            valueListenable: AuthService().xpNotifier,
-            builder: (context, xp, _) {
-              return ValueListenableBuilder(
-                valueListenable: AuthService().coinsNotifier,
-                builder: (context, coins, _) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Your balance',
-                        style: AppTypography.caption1(
-                          context,
-                        ).copyWith(color: Colors.white54),
+          children: [
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${item.item.name}${item.selectedSize != null ? ' (${item.selectedSize})' : ''} × ${item.quantity}',
+                        style: AppTypography.body(context),
                       ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            color: AppTheme.cyanAccent,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$xp XP',
-                            style: AppTypography.caption1(
-                              context,
-                            ).copyWith(color: AppTheme.cyanAccent),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.monetization_on,
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.monetization_on,
+                          color: AppTheme.yellowPrimary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${item.subtotal}',
+                          style: AppTypography.body(context).copyWith(
                             color: AppTheme.yellowPrimary,
-                            size: 16,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$coins',
-                            style: AppTypography.caption1(
-                              context,
-                            ).copyWith(color: AppTheme.yellowPrimary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Your balance',
+                  style: AppTypography.caption1(context).copyWith(
+                    color: Colors.white54,
+                  ),
+                ),
+                BalanceDisplay(size: BalanceSize.small),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -428,7 +513,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         gradient: AppTheme.cardBackgroundGradient,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.cyanAccent.withOpacity(0.3),
+          color: AppTheme.cyanAccent.withValues(alpha:0.3),
           width: 2,
         ),
       ),
@@ -498,12 +583,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _selectedState,
+                    value: _selectedState,
                     decoration: InputDecoration(
                       labelText: 'State',
                       prefixIcon: const Icon(Icons.map),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: AppTheme.cyanAccent,
+                          width: 2,
+                        ),
                       ),
                     ),
                     items: _usStates.map((state) {
@@ -539,12 +637,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _selectedState,
+                    value: _selectedState,
                     decoration: InputDecoration(
                       labelText: 'State',
                       prefixIcon: const Icon(Icons.map),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: AppTheme.cyanAccent,
+                          width: 2,
+                        ),
                       ),
                     ),
                     items: _usStates.map((state) {
@@ -596,7 +707,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppTheme.cyanAccent.withOpacity(0.3)),
+          borderSide: BorderSide(color: AppTheme.cyanAccent.withValues(alpha:0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
