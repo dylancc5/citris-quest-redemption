@@ -24,6 +24,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
 
   // Address form controllers
   final _firstNameController = TextEditingController();
@@ -39,15 +40,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // US states
   static const _usStates = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
   ];
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _addressLine1Controller.dispose();
@@ -154,88 +201,94 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       body: AnimatedStarfield(
         child: Scrollbar(
+          controller: _scrollController,
           thickness: 6,
           radius: const Radius.circular(3),
           child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(scrollbars: false),
             child: Center(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: EdgeInsets.fromLTRB(
-                Breakpoints.isMobile(context) ? 12 : 16,
-                Breakpoints.isMobile(context) ? 12 : 16,
-                Breakpoints.isMobile(context) ? 6 : 10,
-                Breakpoints.isMobile(context) ? 12 : 16,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Order summary card
-                    _buildOrderSummary(),
-                    const SizedBox(height: 24),
-
-                    // Shipping address section
-                    Text(
-                      'Shipping Address',
-                      style: AppTypography.title1(context),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'US addresses only',
-                      style: AppTypography.caption1(context).copyWith(
-                        color: Colors.white54,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Address form
-                    _buildAddressForm(),
-                    const SizedBox(height: 24),
-
-                    // Non-refundable notice
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.orange.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
+                  Breakpoints.isMobile(context) ? 12 : 16,
+                  Breakpoints.isMobile(context) ? 12 : 16,
+                  Breakpoints.isMobile(context) ? 6 : 10,
+                  Breakpoints.isMobile(context) ? 12 : 16,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Icon(Icons.info_outline, color: Colors.orange),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'All redemptions are final. No refunds or cancellations.',
-                              style: TextStyle(color: Colors.orange),
+                          // Order summary card
+                          _buildOrderSummary(),
+                          const SizedBox(height: 24),
+
+                          // Shipping address section
+                          Text(
+                            'Shipping Address',
+                            style: AppTypography.title1(context),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'US addresses only',
+                            style: AppTypography.caption1(
+                              context,
+                            ).copyWith(color: Colors.white54),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Address form
+                          _buildAddressForm(),
+                          const SizedBox(height: 24),
+
+                          // Non-refundable notice
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.orange.withOpacity(0.3),
+                              ),
                             ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.orange),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'All redemptions are final. No refunds or cancellations.',
+                                    style: TextStyle(color: Colors.orange),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Confirm order button
+                          PrimaryButton(
+                            text: _isProcessing
+                                ? 'Processing...'
+                                : 'Confirm Order',
+                            onPressed: _isProcessing ? null : _processOrder,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    // Confirm order button
-                    PrimaryButton(
-                      text: _isProcessing ? 'Processing...' : 'Confirm Order',
-                      onPressed: _isProcessing ? null : _processOrder,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-      ),
-      ),
       ),
     );
   }
@@ -257,54 +310,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Order Summary',
-            style: AppTypography.title2(context),
-          ),
+          Text('Order Summary', style: AppTypography.title2(context)),
           const SizedBox(height: 16),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    '${item.item.name}${item.selectedSize != null ? ' (${item.selectedSize})' : ''} × ${item.quantity}',
-                    style: AppTypography.body(context),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.subtotal}',
-                      style: AppTypography.body(context).copyWith(
-                        color: AppTheme.yellowPrimary,
-                      ),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${item.item.name}${item.selectedSize != null ? ' (${item.selectedSize})' : ''} × ${item.quantity}',
+                      style: AppTypography.body(context),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.monetization_on,
+                        color: AppTheme.yellowPrimary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.subtotal}',
+                        style: AppTypography.body(
+                          context,
+                        ).copyWith(color: AppTheme.yellowPrimary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Total',
-                style: AppTypography.title2(context),
-              ),
+              Text('Total', style: AppTypography.title2(context)),
               Row(
                 children: [
                   Icon(Icons.monetization_on, color: AppTheme.yellowPrimary),
                   const SizedBox(width: 8),
                   Text(
                     '$totalCost',
-                    style: AppTypography.title1(context).copyWith(
-                      color: AppTheme.yellowPrimary,
-                    ),
+                    style: AppTypography.title1(
+                      context,
+                    ).copyWith(color: AppTheme.yellowPrimary),
                   ),
                 ],
               ),
@@ -322,28 +375,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     children: [
                       Text(
                         'Your balance',
-                        style: AppTypography.caption1(context).copyWith(
-                          color: Colors.white54,
-                        ),
+                        style: AppTypography.caption1(
+                          context,
+                        ).copyWith(color: Colors.white54),
                       ),
                       Row(
                         children: [
-                          Icon(Icons.star, color: AppTheme.cyanAccent, size: 16),
+                          Icon(
+                            Icons.star,
+                            color: AppTheme.cyanAccent,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '$xp XP',
-                            style: AppTypography.caption1(context).copyWith(
-                              color: AppTheme.cyanAccent,
-                            ),
+                            style: AppTypography.caption1(
+                              context,
+                            ).copyWith(color: AppTheme.cyanAccent),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 16),
+                          Icon(
+                            Icons.monetization_on,
+                            color: AppTheme.yellowPrimary,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '$coins',
-                            style: AppTypography.caption1(context).copyWith(
-                              color: AppTheme.yellowPrimary,
-                            ),
+                            style: AppTypography.caption1(
+                              context,
+                            ).copyWith(color: AppTheme.yellowPrimary),
                           ),
                         ],
                       ),
@@ -437,7 +498,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedState,
+                    initialValue: _selectedState,
                     decoration: InputDecoration(
                       labelText: 'State',
                       prefixIcon: const Icon(Icons.map),
@@ -446,10 +507,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     items: _usStates.map((state) {
-                      return DropdownMenuItem(
-                        value: state,
-                        child: Text(state),
-                      );
+                      return DropdownMenuItem(value: state, child: Text(state));
                     }).toList(),
                     onChanged: (value) {
                       setState(() => _selectedState = value!);
@@ -481,7 +539,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedState,
+                    initialValue: _selectedState,
                     decoration: InputDecoration(
                       labelText: 'State',
                       prefixIcon: const Icon(Icons.map),
@@ -490,10 +548,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     items: _usStates.map((state) {
-                      return DropdownMenuItem(
-                        value: state,
-                        child: Text(state),
-                      );
+                      return DropdownMenuItem(value: state, child: Text(state));
                     }).toList(),
                     onChanged: (value) {
                       setState(() => _selectedState = value!);
@@ -538,21 +593,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppTheme.cyanAccent.withOpacity(0.3),
-          ),
+          borderSide: BorderSide(color: AppTheme.cyanAccent.withOpacity(0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppTheme.cyanAccent,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: AppTheme.cyanAccent, width: 2),
         ),
       ),
       keyboardType: keyboardType,

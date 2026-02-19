@@ -17,6 +17,7 @@ class OrderHistoryScreen extends StatefulWidget {
 }
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  final _scrollController = ScrollController();
   List<MerchOrder>? _orders;
   bool _isLoading = true;
   String? _errorMessage;
@@ -25,6 +26,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   void initState() {
     super.initState();
     _loadOrders();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadOrders() async {
@@ -68,17 +75,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           MaterialPageRoute(builder: (_) => const CartScreen()),
         ),
       ),
-      body: AnimatedStarfield(
-        child: _buildBody(),
-      ),
+      body: AnimatedStarfield(child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
@@ -90,9 +93,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
-              style: AppTypography.title2(context).copyWith(
-                color: Colors.red,
-              ),
+              style: AppTypography.title2(context).copyWith(color: Colors.red),
             ),
           ],
         ),
@@ -104,17 +105,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 100,
-              color: Colors.white30,
-            ),
+            Icon(Icons.receipt_long_outlined, size: 100, color: Colors.white30),
             const SizedBox(height: 24),
             Text(
               'No orders yet',
-              style: AppTypography.title1(context).copyWith(
-                color: Colors.white54,
-              ),
+              style: AppTypography.title1(
+                context,
+              ).copyWith(color: Colors.white54),
             ),
             const SizedBox(height: 16),
             TextButton(
@@ -127,11 +124,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
 
     return Scrollbar(
+      controller: _scrollController,
       thickness: 6,
       radius: const Radius.circular(3),
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: ListView.builder(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
           itemCount: _orders!.length,
           itemBuilder: (context, index) {
@@ -213,9 +212,9 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${order.createdAt.month}/${order.createdAt.day}/${order.createdAt.year}',
-                    style: AppTypography.caption1(context).copyWith(
-                      color: Colors.white70,
-                    ),
+                    style: AppTypography.caption1(
+                      context,
+                    ).copyWith(color: Colors.white70),
                   ),
                 ],
               ),
@@ -226,9 +225,7 @@ class _OrderCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: _getStatusColor().withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _getStatusColor().withOpacity(0.5),
-                ),
+                border: Border.all(color: _getStatusColor().withOpacity(0.5)),
               ),
               child: Text(
                 _getStatusText(),
@@ -249,25 +246,29 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 '${AuthService().xp} XP',
-                style: AppTypography.body(context).copyWith(
-                  color: AppTheme.cyanAccent,
-                ),
+                style: AppTypography.body(
+                  context,
+                ).copyWith(color: AppTheme.cyanAccent),
               ),
               const SizedBox(width: 12),
-              Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 16),
+              Icon(
+                Icons.monetization_on,
+                color: AppTheme.yellowPrimary,
+                size: 16,
+              ),
               const SizedBox(width: 4),
               Text(
                 '${order.totalCoins} coins',
-                style: AppTypography.body(context).copyWith(
-                  color: AppTheme.yellowPrimary,
-                ),
+                style: AppTypography.body(
+                  context,
+                ).copyWith(color: AppTheme.yellowPrimary),
               ),
               const SizedBox(width: 16),
               Text(
                 '${order.items.length} ${order.items.length == 1 ? 'item' : 'items'}',
-                style: AppTypography.body(context).copyWith(
-                  color: Colors.white70,
-                ),
+                style: AppTypography.body(
+                  context,
+                ).copyWith(color: Colors.white70),
               ),
             ],
           ),
@@ -277,53 +278,59 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Items list
-          ...order.items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    '${item.itemName}${item.size != null ? ' (${item.size})' : ''} × ${item.quantity}',
-                    style: AppTypography.body(context),
+          ...order.items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${item.itemName}${item.size != null ? ' (${item.size})' : ''} × ${item.quantity}',
+                      style: AppTypography.body(context),
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.monetization_on,
-                      color: AppTheme.yellowPrimary,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.subtotal}',
-                      style: AppTypography.caption1(context).copyWith(
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.monetization_on,
                         color: AppTheme.yellowPrimary,
+                        size: 14,
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.subtotal}',
+                        style: AppTypography.caption1(
+                          context,
+                        ).copyWith(color: AppTheme.yellowPrimary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
           const SizedBox(height: 8),
 
           // Shipping address
-          if (order.shippingAddress != null) ...[
+          ...[
             const Divider(),
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.local_shipping, size: 16, color: Colors.white70),
+                const Icon(
+                  Icons.local_shipping,
+                  size: 16,
+                  color: Colors.white70,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     order.shippingAddress.toString(),
-                    style: AppTypography.caption1(context).copyWith(
-                      color: Colors.white70,
-                    ),
+                    style: AppTypography.caption1(
+                      context,
+                    ).copyWith(color: Colors.white70),
                   ),
                 ),
               ],
@@ -335,13 +342,17 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.local_shipping, size: 16, color: Colors.white70),
+                const Icon(
+                  Icons.local_shipping,
+                  size: 16,
+                  color: Colors.white70,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Tracking: ${order.trackingNumber}',
-                  style: AppTypography.caption1(context).copyWith(
-                    color: AppTheme.cyanAccent,
-                  ),
+                  style: AppTypography.caption1(
+                    context,
+                  ).copyWith(color: AppTheme.cyanAccent),
                 ),
               ],
             ),
