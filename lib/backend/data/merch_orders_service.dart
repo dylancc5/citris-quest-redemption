@@ -56,7 +56,9 @@ class MerchOrdersService {
           .map((json) => MerchOrder.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('MerchOrdersService: Fetched ${orders.length} orders for user $userId');
+      debugPrint(
+        'MerchOrdersService: Fetched ${orders.length} orders for user $userId',
+      );
       return orders;
     } catch (e) {
       debugPrint('MerchOrdersService: Failed to fetch orders: $e');
@@ -73,7 +75,7 @@ class MerchOrdersService {
           .eq('id', orderId)
           .single();
 
-      return MerchOrder.fromJson(response as Map<String, dynamic>);
+      return MerchOrder.fromJson(response);
     } catch (e) {
       debugPrint('MerchOrdersService: Failed to fetch order $orderId: $e');
       return null;
@@ -92,9 +94,7 @@ class MerchOrdersService {
     DateTime? deliveredAt,
   }) async {
     try {
-      final updateData = <String, dynamic>{
-        'status': status.name,
-      };
+      final updateData = <String, dynamic>{'status': status.name};
 
       if (trackingNumber != null) {
         updateData['tracking_number'] = trackingNumber;
@@ -106,12 +106,11 @@ class MerchOrdersService {
         updateData['delivered_at'] = deliveredAt.toIso8601String();
       }
 
-      await _supabase
-          .from('merch_orders')
-          .update(updateData)
-          .eq('id', orderId);
+      await _supabase.from('merch_orders').update(updateData).eq('id', orderId);
 
-      debugPrint('MerchOrdersService: Updated order $orderId status to ${status.name}');
+      debugPrint(
+        'MerchOrdersService: Updated order $orderId status to ${status.name}',
+      );
       return true;
     } catch (e) {
       debugPrint('MerchOrdersService: Failed to update order status: $e');

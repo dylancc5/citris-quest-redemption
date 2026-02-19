@@ -11,8 +11,21 @@ import 'cart_screen.dart';
 import 'order_history_screen.dart';
 
 /// Landing screen displaying 4 merch items in responsive grid
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +42,13 @@ class LandingScreen extends StatelessWidget {
       ),
       body: AnimatedStarfield(
         child: Scrollbar(
+          controller: _scrollController,
           thickness: 6,
           radius: const Radius.circular(3),
           child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   Breakpoints.cardSpacing(context),
