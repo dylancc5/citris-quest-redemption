@@ -46,14 +46,17 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      // Login successful - return to previous screen
-      Navigator.pop(context);
+      // Login successful - show snackbar then return to previous screen
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Welcome back, ${AuthService().username}!'),
           backgroundColor: AppTheme.greenPrimary,
         ),
       );
+      // Use addPostFrameCallback to ensure snackbar is shown
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.pop(context);
+      });
     } else {
       // Login failed
       setState(() {
@@ -80,12 +83,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 gradient: AppTheme.cardBackgroundGradient,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppTheme.cyanAccent.withOpacity(0.3),
+                  color: AppTheme.cyanAccent.withValues(alpha:0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.cyanAccent.withOpacity(0.2),
+                    color: AppTheme.cyanAccent.withValues(alpha:0.2),
                     blurRadius: 20,
                   ),
                 ],
@@ -126,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: AppTheme.cyanAccent.withOpacity(0.3),
+                            color: AppTheme.cyanAccent.withValues(alpha:0.3),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -160,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: AppTheme.cyanAccent.withOpacity(0.3),
+                            color: AppTheme.cyanAccent.withValues(alpha:0.3),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -189,10 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Colors.red.withOpacity(0.3),
+                            color: Colors.red.withValues(alpha:0.3),
                           ),
                         ),
                         child: Row(

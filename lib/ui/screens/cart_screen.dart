@@ -8,6 +8,8 @@ import '../../backend/domain/models/cart_item.dart';
 import '../../backend/data/auth_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
+import '../../widgets/common/balance_display.dart';
+import '../../painters/space_invader_painter.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'login_screen.dart';
 import 'checkout_screen.dart';
@@ -75,22 +77,26 @@ class CartScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 100,
-            color: Colors.white30,
+          // Space Invader icon
+          SizedBox(
+            width: 120,
+            height: 100,
+            child: CustomPaint(
+              painter: SpaceInvaderPainter(color: AppTheme.cyanAccent.withValues(alpha: 0.3)),
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Text(
             'Your cart is empty',
             style: AppTypography.title1(context).copyWith(
               color: Colors.white54,
             ),
           ),
-          const SizedBox(height: 16),
-          TextButton(
+          const SizedBox(height: 24),
+          PrimaryButton(
+            text: 'Browse Merch',
             onPressed: () => Navigator.pop(context),
-            child: const Text('Continue Shopping'),
+            height: 50,
           ),
         ],
       ),
@@ -101,6 +107,7 @@ class CartScreen extends StatelessWidget {
     final isMobile = Breakpoints.isMobile(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final isCompact = screenHeight < 700;
+    final totalCost = CartService().totalCost;
 
     return Container(
       padding: EdgeInsets.all(isCompact ? 8 : (isMobile ? 12 : 16)),
@@ -126,47 +133,17 @@ class CartScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Your balance
-            ValueListenableBuilder<int>(
-              valueListenable: AuthService().xpNotifier,
-              builder: (context, xp, _) {
-                return ValueListenableBuilder<int>(
-                  valueListenable: AuthService().coinsNotifier,
-                  builder: (context, coins, _) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Your balance',
-                          style: AppTypography.caption1(context).copyWith(
-                            color: Colors.white54,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.star, color: AppTheme.cyanAccent, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$xp XP',
-                              style: AppTypography.caption1(context).copyWith(
-                                color: AppTheme.cyanAccent,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$coins',
-                              style: AppTypography.caption1(context).copyWith(
-                                color: AppTheme.yellowPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Your balance',
+                  style: AppTypography.caption1(context).copyWith(
+                    color: Colors.white54,
+                  ),
+                ),
+                BalanceDisplay(size: BalanceSize.small),
+              ],
             ),
             SizedBox(height: isCompact ? 6 : 12),
 
@@ -183,7 +160,7 @@ class CartScreen extends StatelessWidget {
                     Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: isCompact ? 20 : 24),
                     const SizedBox(width: 8),
                     Text(
-                      '${CartService().totalCost}',
+                      '$totalCost',
                       style: AppTypography.title1(context).copyWith(
                         color: AppTheme.yellowPrimary,
                       ),
@@ -191,6 +168,40 @@ class CartScreen extends StatelessWidget {
                   ],
                 ),
               ],
+            ),
+            SizedBox(height: isCompact ? 6 : 12),
+
+            // Balance projection (after purchase)
+            ValueListenableBuilder<int>(
+              valueListenable: AuthService().coinsNotifier,
+              builder: (context, coins, _) {
+                final remaining = coins - totalCost;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'After purchase',
+                      style: AppTypography.caption1(context).copyWith(
+                        color: Colors.white54,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(Icons.monetization_on,
+                          color: remaining >= 0 ? AppTheme.yellowPrimary : Colors.red,
+                          size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$remaining remaining',
+                          style: AppTypography.caption1(context).copyWith(
+                            color: remaining >= 0 ? AppTheme.yellowPrimary : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
             SizedBox(height: isCompact ? 8 : 16),
 
@@ -248,13 +259,35 @@ class _CartItemCard extends StatelessWidget {
           color: AppTheme.cyanAccent.withValues(alpha: 0.3),
           width: 2,
         ),
+        // Accent color stripe on left
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.bluePrimary.withValues(alpha: 0.3),
+            offset: const Offset(-4, 0),
+            blurRadius: 0,
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(isCompact ? 8 : 16),
-        child: Column(
-          children: [
-            Row(
-              children: [
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: AppTheme.bluePrimary,
+              width: 4,
+            ),
+          ),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(12),
+            bottomLeft: Radius.circular(12),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isCompact ? 8 : 16),
+          child: Column(
+            children: [
+              Row(
+                children: [
                 // Product icon
                 Container(
                   width: iconBoxSize,
@@ -366,13 +399,13 @@ class _CartItemCard extends StatelessWidget {
                       ),
                     ],
                   ),
-              ],
-            ),
+                ],
+              ),
 
-            // Quantity controls row (below on compact screens)
-            if (isCompact) ...[
-              const SizedBox(height: 6),
-              Row(
+              // Quantity controls row (below on compact screens)
+              if (isCompact) ...[
+                const SizedBox(height: 6),
+                Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton.icon(
@@ -425,9 +458,10 @@ class _CartItemCard extends StatelessWidget {
                     ],
                   ),
                 ],
-              ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

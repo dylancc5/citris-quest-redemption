@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../core/theme.dart';
 import '../../core/typography.dart';
 import '../../backend/data/auth_service.dart';
@@ -11,10 +12,53 @@ import 'landing_screen.dart';
 import 'order_history_screen.dart';
 
 /// Success screen showing order confirmation
-class SuccessScreen extends StatelessWidget {
+class SuccessScreen extends StatefulWidget {
   final MerchOrder order;
 
   const SuccessScreen({super.key, required this.order});
+
+  @override
+  State<SuccessScreen> createState() => _SuccessScreenState();
+}
+
+class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _confettiController;
+  final List<ConfettiParticle> _particles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    // Generate confetti particles
+    final random = math.Random();
+    for (int i = 0; i < 30; i++) {
+      _particles.add(ConfettiParticle(
+        x: random.nextDouble(),
+        y: -0.1,
+        vx: (random.nextDouble() - 0.5) * 0.3,
+        vy: random.nextDouble() * 0.5 + 0.3,
+        color: [
+          AppTheme.cyanAccent,
+          AppTheme.yellowPrimary,
+          AppTheme.greenPrimary,
+          AppTheme.magentaPrimary,
+        ][random.nextInt(4)],
+        size: random.nextDouble() * 6 + 4,
+      ));
+    }
+
+    _confettiController.forward();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,30 +75,32 @@ class SuccessScreen extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
         ),
       ),
-      body: AnimatedStarfield(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+      body: Stack(
+        children: [
+          AnimatedStarfield(
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                     // Success icon
                     Container(
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.greenPrimary.withOpacity(0.2),
+                        color: AppTheme.greenPrimary.withValues(alpha:0.2),
                         border: Border.all(
                           color: AppTheme.greenPrimary,
                           width: 3,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.greenPrimary.withOpacity(0.4),
+                            color: AppTheme.greenPrimary.withValues(alpha:0.4),
                             blurRadius: 30,
                             spreadRadius: 10,
                           ),
@@ -95,12 +141,12 @@ class SuccessScreen extends StatelessWidget {
                         gradient: AppTheme.cardBackgroundGradient,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppTheme.cyanAccent.withOpacity(0.3),
+                          color: AppTheme.cyanAccent.withValues(alpha:0.3),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.cyanAccent.withOpacity(0.2),
+                            color: AppTheme.cyanAccent.withValues(alpha:0.2),
                             blurRadius: 20,
                           ),
                         ],
@@ -117,21 +163,23 @@ class SuccessScreen extends StatelessWidget {
                           // Order ID
                           _buildInfoRow(
                             'Order ID',
-                            order.id.substring(0, 8).toUpperCase(),
+                            widget.order.id.substring(0, 8).toUpperCase(),
                           ),
                           const SizedBox(height: 12),
 
-                          // Printify Order ID
+                          // Printify Order ID (truncated)
                           _buildInfoRow(
                             'Printify Order',
-                            order.printifyOrderId,
+                            widget.order.printifyOrderId.length > 12
+                                ? '${widget.order.printifyOrderId.substring(0, 12)}...'
+                                : widget.order.printifyOrderId,
                           ),
                           const SizedBox(height: 12),
 
                           // Date
                           _buildInfoRow(
                             'Date',
-                            '${order.createdAt.month}/${order.createdAt.day}/${order.createdAt.year}',
+                            '${widget.order.createdAt.month}/${widget.order.createdAt.day}/${widget.order.createdAt.year}',
                           ),
                           const Divider(height: 32),
 
@@ -141,7 +189,7 @@ class SuccessScreen extends StatelessWidget {
                             style: AppTypography.title2(context),
                           ),
                           const SizedBox(height: 12),
-                          ...order.items.map((item) => Padding(
+                          ...widget.order.items.map((item) => Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -189,7 +237,7 @@ class SuccessScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '${order.totalCoins}',
+                                    '${widget.order.totalCoins}',
                                     style: AppTypography.title1(context).copyWith(
                                       color: AppTheme.yellowPrimary,
                                     ),
@@ -199,45 +247,75 @@ class SuccessScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
+
+                          // Before/After coin comparison
                           ValueListenableBuilder(
-                            valueListenable: AuthService().xpNotifier,
-                            builder: (context, xp, _) {
-                              return ValueListenableBuilder(
-                                valueListenable: AuthService().coinsNotifier,
-                                builder: (context, coins, _) {
-                                  return Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Remaining Balance',
-                                        style: AppTypography.caption1(context).copyWith(
-                                          color: Colors.white54,
+                            valueListenable: AuthService().coinsNotifier,
+                            builder: (context, coins, _) {
+                              final before = coins + widget.order.totalCoins;
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.greenPrimary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppTheme.greenPrimary.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Text(
+                                          'Before',
+                                          style: AppTypography.caption1(context).copyWith(
+                                            color: Colors.white54,
+                                          ),
                                         ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.star, color: AppTheme.cyanAccent, size: 16),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '$xp XP',
-                                            style: AppTypography.caption1(context).copyWith(
-                                              color: AppTheme.cyanAccent,
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.monetization_on,
+                                                color: AppTheme.yellowPrimary, size: 20),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '$before',
+                                              style: AppTypography.title2(context).copyWith(
+                                                color: AppTheme.yellowPrimary,
+                                              ),
                                             ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Icon(Icons.arrow_forward, color: AppTheme.cyanAccent),
+                                    Column(
+                                      children: [
+                                        Text(
+                                          'After',
+                                          style: AppTypography.caption1(context).copyWith(
+                                            color: Colors.white54,
                                           ),
-                                          const SizedBox(width: 12),
-                                          Icon(Icons.monetization_on, color: AppTheme.yellowPrimary, size: 16),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '$coins',
-                                            style: AppTypography.caption1(context).copyWith(
-                                              color: AppTheme.yellowPrimary,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.monetization_on,
+                                                color: AppTheme.greenPrimary, size: 20),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '$coins',
+                                              style: AppTypography.title2(context).copyWith(
+                                                color: AppTheme.greenPrimary,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                },
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               );
                             },
                           ),
@@ -250,7 +328,7 @@ class SuccessScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            order.shippingAddress.toString(),
+                            widget.order.shippingAddress.toString(),
                             style: AppTypography.body(context).copyWith(
                               color: Colors.white70,
                             ),
@@ -264,10 +342,10 @@ class SuccessScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.bluePrimary.withOpacity(0.1),
+                        color: AppTheme.bluePrimary.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: AppTheme.bluePrimary.withOpacity(0.3),
+                          color: AppTheme.bluePrimary.withValues(alpha:0.3),
                         ),
                       ),
                       child: Row(
@@ -285,9 +363,21 @@ class SuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
 
-                    // Return to shop button
+                    // Buttons
                     PrimaryButton(
-                      text: 'Return to Shop',
+                      text: 'View My Orders',
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const OrderHistoryScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
                       onPressed: () {
                         Navigator.pushAndRemoveUntil(
                           context,
@@ -297,13 +387,33 @@ class SuccessScreen extends StatelessWidget {
                           (route) => false,
                         );
                       },
+                      icon: const Icon(Icons.storefront),
+                      label: const Text('Return to Shop'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.cyanAccent,
+                      ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+          // Confetti animation
+          AnimatedBuilder(
+            animation: _confettiController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: ConfettiPainter(
+                  particles: _particles,
+                  progress: _confettiController.value,
+                ),
+                size: Size.infinite,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -330,4 +440,60 @@ class SuccessScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Confetti particle data
+class ConfettiParticle {
+  double x;
+  double y;
+  final double vx;
+  final double vy;
+  final Color color;
+  final double size;
+
+  ConfettiParticle({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.color,
+    required this.size,
+  });
+}
+
+/// Painter for confetti particles
+class ConfettiPainter extends CustomPainter {
+  final List<ConfettiParticle> particles;
+  final double progress;
+
+  ConfettiPainter({required this.particles, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress >= 1.0) return;
+
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (var particle in particles) {
+      // Update particle position
+      particle.y += particle.vy * 0.02;
+      particle.x += particle.vx * 0.02;
+
+      // Only draw if still on screen
+      if (particle.y < 1.1) {
+        paint.color = particle.color.withValues(alpha: 1.0 - progress);
+
+        final px = particle.x * size.width;
+        final py = particle.y * size.height;
+
+        canvas.drawRect(
+          Rect.fromLTWH(px, py, particle.size, particle.size),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ConfettiPainter oldDelegate) => true;
 }

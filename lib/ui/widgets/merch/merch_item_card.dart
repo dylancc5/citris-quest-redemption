@@ -28,25 +28,27 @@ class MerchItemCard extends StatelessWidget {
         ),
       ),
       child: HoverLiftCard(
-        child: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.cardBackgroundGradient,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.3),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.2),
-              blurRadius: 12,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.cardBackgroundGradient,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             // Image/Icon
             Expanded(
               flex: 3,
@@ -69,7 +71,7 @@ class MerchItemCard extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -138,21 +140,17 @@ class MerchItemCard extends StatelessWidget {
                                   padding: const EdgeInsets.only(top: 6),
                                   child: Column(
                                     children: [
-                                      // XP progress bar
-                                      _buildProgressBar(
-                                        context,
-                                        label: hasEnoughXp
-                                            ? 'XP unlocked!'
-                                            : '$xp / $xpThreshold XP',
-                                        progress: xpProgress,
-                                        barColor: hasEnoughXp
-                                            ? AppTheme.greenPrimary
-                                            : AppTheme.cyanAccent,
-                                        labelColor: hasEnoughXp
-                                            ? AppTheme.greenPrimary
-                                            : Colors.white54,
-                                      ),
-                                      const SizedBox(height: 4),
+                                      // XP progress bar (only show if user hasn't met threshold)
+                                      if (!hasEnoughXp) ...[
+                                        _buildProgressBar(
+                                          context,
+                                          label: '$xp / $xpThreshold XP',
+                                          progress: xpProgress,
+                                          barColor: AppTheme.cyanAccent,
+                                          labelColor: Colors.white54,
+                                        ),
+                                        const SizedBox(height: 4),
+                                      ],
                                       // Coins progress bar
                                       _buildProgressBar(
                                         context,
@@ -182,7 +180,70 @@ class MerchItemCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
+            ),
+            // Badge overlay - UNLOCKED/LOCKED based on XP gate
+            Positioned(
+              top: 8,
+              right: 8,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: AuthService().isLoggedInNotifier,
+                builder: (context, isLoggedIn, _) {
+                  if (!isLoggedIn) return const SizedBox.shrink();
+
+                  return ValueListenableBuilder<int>(
+                    valueListenable: AuthService().xpNotifier,
+                    builder: (context, xp, _) {
+                      final hasEnoughXp = xp >= MerchConfig.xpGateThreshold;
+                      final badgeColor = hasEnoughXp
+                          ? AppTheme.greenPrimary
+                          : AppTheme.redPrimary;
+                      final badgeIcon = hasEnoughXp
+                          ? Icons.lock_open
+                          : Icons.lock;
+                      final badgeText = hasEnoughXp ? 'UNLOCKED' : 'LOCKED';
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: badgeColor.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              badgeIcon,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              badgeText,
+                              style: AppTypography.caption2(context).copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

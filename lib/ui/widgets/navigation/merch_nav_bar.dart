@@ -5,6 +5,7 @@ import '../../../core/breakpoints.dart';
 import '../../../backend/data/auth_service.dart';
 import '../../../backend/services/cart_service.dart';
 import '../../../painters/space_invader_painter.dart';
+import '../../../widgets/common/balance_display.dart';
 import '../../screens/login_screen.dart';
 
 /// Styled nav bar for the merch shop with retro glow aesthetic.
@@ -68,8 +69,10 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  /// Main landing page layout: Logo | Title | Cart + Login
+  /// Main landing page layout: Logo | Title | Balance (desktop) | Cart + Login
   Widget _buildMainLayout(BuildContext context) {
+    final isMobile = Breakpoints.isMobile(context);
+
     return Row(
       children: [
         // SpaceInvader logo
@@ -88,6 +91,36 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        // Balance chip (desktop only, when logged in)
+        if (!isMobile)
+          ValueListenableBuilder<bool>(
+            valueListenable: AuthService().isLoggedInNotifier,
+            builder: (context, isLoggedIn, _) {
+              if (!isLoggedIn) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: const BalanceDisplay(
+                    size: BalanceSize.small,
+                    showXp: true,
+                    showCoins: true,
+                  ),
+                ),
+              );
+            },
+          ),
         // Action buttons
         ..._buildMainActions(context),
       ],

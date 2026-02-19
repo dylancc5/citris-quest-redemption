@@ -81,7 +81,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildLoadingSkeleton();
     }
 
     if (_errorMessage != null) {
@@ -123,20 +123,54 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       );
     }
 
-    return Scrollbar(
-      controller: _scrollController,
-      thickness: 6,
-      radius: const Radius.circular(3),
-      child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+    return RefreshIndicator(
+      onRefresh: _loadOrders,
+      child: Scrollbar(
+        controller: _scrollController,
+        thickness: 6,
+        radius: const Radius.circular(3),
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
+            itemCount: _orders!.length,
+            itemBuilder: (context, index) {
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: _OrderCard(order: _orders![index]),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingSkeleton() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700),
         child: ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
-          itemCount: _orders!.length,
+          padding: const EdgeInsets.all(16),
+          itemCount: 3,
           itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: _OrderCard(order: _orders![index]),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: AppTheme.cardBackgroundGradient,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
             );
           },
         ),
@@ -192,7 +226,7 @@ class _OrderCard extends StatelessWidget {
         gradient: AppTheme.cardBackgroundGradient,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.cyanAccent.withOpacity(0.3),
+          color: AppTheme.cyanAccent.withValues(alpha:0.3),
           width: 2,
         ),
       ),
@@ -223,9 +257,9 @@ class _OrderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _getStatusColor().withOpacity(0.2),
+                color: _getStatusColor().withValues(alpha:0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _getStatusColor().withOpacity(0.5)),
+                border: Border.all(color: _getStatusColor().withValues(alpha:0.5)),
               ),
               child: Text(
                 _getStatusText(),
@@ -242,15 +276,6 @@ class _OrderCard extends StatelessWidget {
           padding: const EdgeInsets.only(top: 8),
           child: Row(
             children: [
-              Icon(Icons.star, color: AppTheme.cyanAccent, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                '${AuthService().xp} XP',
-                style: AppTypography.body(
-                  context,
-                ).copyWith(color: AppTheme.cyanAccent),
-              ),
-              const SizedBox(width: 12),
               Icon(
                 Icons.monetization_on,
                 color: AppTheme.yellowPrimary,
