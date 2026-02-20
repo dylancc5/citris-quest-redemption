@@ -19,7 +19,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// 1. Tiny 5 - Finer, more readable (DEFAULT for all screens)
 /// 2. Silkscreen - Bold, chunky, retro (splash screen only via silk___ methods)
 ///
-/// Default methods use Micro 5:
+/// Default methods use Tiny 5:
 /// - largeTitle(), body(), headline(), etc.
 ///
 /// Silk methods use Silkscreen:

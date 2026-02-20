@@ -150,8 +150,8 @@ class AppTheme {
   static ThemeData get theme {
     return ThemeData(
       primarySwatch: Colors.blue,
-      // Use Micro 5 font globally (default for all screens except splash)
-      textTheme: GoogleFonts.micro5TextTheme(ThemeData.dark().textTheme),
+      // Use Tiny 5 font globally (default for all screens except splash)
+      textTheme: GoogleFonts.tiny5TextTheme(ThemeData.dark().textTheme),
       scaffoldBackgroundColor: backgroundPrimary,
     );
   }

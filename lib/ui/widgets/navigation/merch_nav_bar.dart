@@ -226,8 +226,8 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
         builder: (context, isLoggedIn, _) {
           if (!isLoggedIn) {
             return _NavIconButton(
-              icon: Icons.login,
-              tooltip: 'Login',
+              icon: Icons.person,
+              tooltip: 'Sign In',
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

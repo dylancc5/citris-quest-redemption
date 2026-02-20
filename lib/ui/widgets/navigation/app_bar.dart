@@ -105,8 +105,8 @@ class MerchAppBar extends StatelessWidget implements PreferredSizeWidget {
           builder: (context, isLoggedIn, _) {
             if (!isLoggedIn) {
               return IconButton(
-                icon: const Icon(Icons.login),
-                tooltip: 'Login',
+                icon: const Icon(Icons.person),
+                tooltip: 'Sign In',
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
