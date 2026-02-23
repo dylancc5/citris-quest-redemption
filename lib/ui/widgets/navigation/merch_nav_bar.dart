@@ -4,8 +4,8 @@ import '../../../core/theme.dart';
 import '../../../core/breakpoints.dart';
 import '../../../backend/data/auth_service.dart';
 import '../../../backend/services/cart_service.dart';
-import '../../../painters/space_invader_painter.dart';
 import '../../../widgets/common/balance_display.dart';
+import '../../../widgets/common/svg_icon.dart';
 import '../../screens/login_screen.dart';
 
 /// Styled nav bar for the merch shop with retro glow aesthetic.
@@ -75,13 +75,13 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
 
     return Row(
       children: [
-        // SpaceInvader logo
+        // SpaceInvader SVG logo
         _buildLogo(context),
         const SizedBox(width: 12),
         // Title
         Expanded(
           child: Text(
-            'CITRIS QUEST MERCH',
+            isMobile ? 'CQ MERCH' : 'CITRIS QUEST MERCH',
             style: GoogleFonts.tiny5(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -91,31 +91,34 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // Balance chip (desktop only, when logged in)
+        // Balance chip (desktop only, when logged in) — fixed max width to prevent overflow
         if (!isMobile)
           ValueListenableBuilder<bool>(
             valueListenable: AuthService().isLoggedInNotifier,
             builder: (context, isLoggedIn, _) {
               if (!isLoggedIn) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppTheme.cyanAccent.withValues(alpha: 0.3),
-                      width: 1,
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                  ),
-                  child: const BalanceDisplay(
-                    size: BalanceSize.small,
-                    showXp: true,
-                    showCoins: true,
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const BalanceDisplay(
+                      size: BalanceSize.small,
+                      showXp: true,
+                      showCoins: true,
+                    ),
                   ),
                 ),
               );
@@ -129,6 +132,8 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// Sub-page layout: Back | Title | Page Actions + Main Actions
   Widget _buildSubPageLayout(BuildContext context) {
+    final isMobile = Breakpoints.isMobile(context);
+
     return Row(
       children: [
         // Back button
@@ -139,7 +144,7 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
           child: Text(
             (title ?? '').toUpperCase(),
             style: GoogleFonts.tiny5(
-              fontSize: 18,
+              fontSize: isMobile ? 14 : 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
               letterSpacing: 1,
@@ -147,6 +152,39 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        // Balance chip on sub-pages (desktop only, when logged in)
+        if (!isMobile)
+          ValueListenableBuilder<bool>(
+            valueListenable: AuthService().isLoggedInNotifier,
+            builder: (context, isLoggedIn, _) {
+              if (!isLoggedIn) return const SizedBox.shrink();
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const BalanceDisplay(
+                      size: BalanceSize.small,
+                      showXp: true,
+                      showCoins: true,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         // Optional page-specific actions
         if (actions != null) ...actions!,
         // Standard actions (orders, cart, profile)
@@ -156,9 +194,10 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildLogo(BuildContext context) {
-    return CustomPaint(
-      size: const Size(33, 24),
-      painter: SpaceInvaderPainter(color: AppTheme.cyanAccent),
+    return SvgIcon(
+      'space_invader',
+      size: 33,
+      color: AppTheme.cyanAccent,
     );
   }
 
@@ -220,14 +259,14 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
           },
         ),
 
-      // Login/Logout button
+      // Login/Account button
       ValueListenableBuilder(
         valueListenable: AuthService().isLoggedInNotifier,
         builder: (context, isLoggedIn, _) {
           if (!isLoggedIn) {
             return _NavIconButton(
               icon: Icons.person,
-              tooltip: 'Sign In',
+              tooltip: 'Sign In to Redeem',
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -254,30 +293,13 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               ),
+              // Balance row in dropdown (always visible, useful on mobile too)
               PopupMenuItem<void>(
                 enabled: false,
-                child: Row(
-                  children: [
-                    Icon(Icons.star, size: 14, color: AppTheme.cyanAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${AuthService().xp} XP',
-                      style: GoogleFonts.tiny5(
-                        fontSize: 13,
-                        color: AppTheme.cyanAccent,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Icon(Icons.monetization_on, size: 14, color: AppTheme.yellowPrimary),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${AuthService().coins} coins',
-                      style: GoogleFonts.tiny5(
-                        fontSize: 13,
-                        color: AppTheme.yellowPrimary,
-                      ),
-                    ),
-                  ],
+                child: const BalanceDisplay(
+                  size: BalanceSize.small,
+                  showXp: true,
+                  showCoins: true,
                 ),
               ),
               const PopupMenuDivider(),
@@ -422,8 +444,7 @@ class _NavCartButtonState extends State<_NavCartButton> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                AppTheme.magentaPrimary.withValues(alpha: 0.6),
+                            color: AppTheme.magentaPrimary.withValues(alpha: 0.6),
                             blurRadius: 6,
                           ),
                         ],
@@ -432,16 +453,17 @@ class _NavCartButtonState extends State<_NavCartButton> {
                         minWidth: 16,
                         minHeight: 16,
                       ),
-                      child: Text(
-                        widget.itemCount > 99
-                            ? '99+'
-                            : '${widget.itemCount}',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      child: Center(
+                        child: Text(
+                          widget.itemCount > 99 ? '99+' : '${widget.itemCount}',
+                          style: GoogleFonts.tiny5(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

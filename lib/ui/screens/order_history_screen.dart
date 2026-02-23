@@ -5,6 +5,7 @@ import '../../backend/data/auth_service.dart';
 import '../../backend/data/merch_orders_service.dart';
 import '../../backend/domain/models/merch_order.dart';
 import '../../widgets/common/animated_starfield.dart';
+import '../../widgets/common/balance_display.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
 
@@ -134,14 +135,55 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
-            itemCount: _orders!.length,
+            itemCount: _orders!.length + 1,
             itemBuilder: (context, index) {
+              // Index 0 = balance header
+              if (index == 0) {
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 700),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6, bottom: 16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppTheme.cyanAccent.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Current balance',
+                              style: AppTypography.caption1(context).copyWith(
+                                color: Colors.white54,
+                              ),
+                            ),
+                            const BalanceDisplay(
+                              size: BalanceSize.small,
+                              showXp: true,
+                              showCoins: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final order = _orders![index - 1];
               return Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 700),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 6),
-                    child: _OrderCard(order: _orders![index]),
+                    child: _OrderCard(order: order),
                   ),
                 ),
               );
@@ -263,10 +305,9 @@ class _OrderCard extends StatelessWidget {
               ),
               child: Text(
                 _getStatusText(),
-                style: TextStyle(
+                style: AppTypography.caption2(context).copyWith(
                   color: _getStatusColor(),
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
                 ),
               ),
             ),

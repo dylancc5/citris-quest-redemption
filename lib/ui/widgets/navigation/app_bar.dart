@@ -84,13 +84,16 @@ class MerchAppBar extends StatelessWidget implements PreferredSizeWidget {
                         minWidth: 18,
                         minHeight: 18,
                       ),
-                      child: Text(
-                        itemCount > 99 ? '99+' : '$itemCount',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                      child: Center(
+                        child: Text(
+                          itemCount > 99 ? '99+' : '$itemCount',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

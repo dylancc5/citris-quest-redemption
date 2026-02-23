@@ -5,6 +5,7 @@ import '../../core/typography.dart';
 import '../../backend/data/auth_service.dart';
 import '../../backend/domain/models/merch_order.dart';
 import '../../widgets/common/animated_starfield.dart';
+import '../../widgets/common/balance_display.dart';
 import '../../widgets/common/primary_button.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
@@ -338,6 +339,36 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                     ),
                     const SizedBox(height: 32),
 
+                    // Remaining balance after purchase
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppTheme.cyanAccent.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Remaining balance',
+                            style: AppTypography.caption1(context).copyWith(
+                              color: Colors.white54,
+                            ),
+                          ),
+                          const BalanceDisplay(
+                            size: BalanceSize.small,
+                            showXp: false,
+                            showCoins: true,
+                            abbreviate: false,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     // Info message
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -355,7 +386,7 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                           Expanded(
                             child: Text(
                               'You can check your order status anytime from the "My Orders" menu.',
-                              style: TextStyle(color: AppTheme.bluePrimary),
+                              style: AppTypography.caption1(context).copyWith(color: AppTheme.bluePrimary),
                             ),
                           ),
                         ],
@@ -424,17 +455,17 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 14,
-          ),
+          style: AppTypography.caption1(context).copyWith(color: Colors.white70),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+        Flexible(
+          child: Text(
+            value,
+            style: AppTypography.caption1(context).copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

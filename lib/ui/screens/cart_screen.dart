@@ -9,7 +9,7 @@ import '../../backend/data/auth_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/balance_display.dart';
-import '../../painters/space_invader_painter.dart';
+import '../../widgets/common/svg_icon.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'login_screen.dart';
 import 'checkout_screen.dart';
@@ -78,12 +78,11 @@ class CartScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Space Invader icon
-          SizedBox(
-            width: 120,
-            height: 100,
-            child: CustomPaint(
-              painter: SpaceInvaderPainter(color: AppTheme.cyanAccent.withValues(alpha: 0.3)),
-            ),
+          SvgIcon(
+            'space_invader',
+            size: 88,
+            color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+            fallbackIcon: Icons.videogame_asset,
           ),
           const SizedBox(height: 32),
           Text(
@@ -205,11 +204,101 @@ class CartScreen extends StatelessWidget {
             ),
             SizedBox(height: isCompact ? 8 : 16),
 
-            // Checkout button
-            PrimaryButton(
-              text: 'Proceed to Checkout',
-              height: isCompact ? 50.0 : 60.0,
-              onPressed: () => _handleCheckout(context),
+            // Locked warning banner
+            ValueListenableBuilder<bool>(
+              valueListenable: AuthService().isLoggedInNotifier,
+              builder: (context, isLoggedIn, _) {
+                if (!isLoggedIn) return const SizedBox.shrink();
+                return ValueListenableBuilder<int>(
+                  valueListenable: AuthService().xpNotifier,
+                  builder: (context, xp, _) {
+                    return ValueListenableBuilder<int>(
+                      valueListenable: AuthService().coinsNotifier,
+                      builder: (context, coins, _) {
+                        final hasEnoughXp = xp >= MerchConfig.xpGateThreshold;
+                        final hasEnoughCoins = coins >= totalCost;
+                        if (hasEnoughXp && hasEnoughCoins) {
+                          return const SizedBox.shrink();
+                        }
+                        final message = !hasEnoughXp
+                            ? 'LOCKED: Need ${MerchConfig.xpGateThreshold - xp} more XP to unlock merch'
+                            : 'Insufficient coins: need ${totalCost - coins} more';
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: (!hasEnoughXp
+                                    ? AppTheme.redPrimary
+                                    : AppTheme.yellowPrimary)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: (!hasEnoughXp
+                                      ? AppTheme.redPrimary
+                                      : AppTheme.yellowPrimary)
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                !hasEnoughXp
+                                    ? Icons.lock
+                                    : Icons.monetization_on,
+                                color: !hasEnoughXp
+                                    ? AppTheme.redPrimary
+                                    : AppTheme.yellowPrimary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  message,
+                                  style: AppTypography.caption1(context).copyWith(
+                                    color: !hasEnoughXp
+                                        ? AppTheme.redPrimary
+                                        : AppTheme.yellowPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+
+            // Checkout button — disabled when locked
+            ValueListenableBuilder<bool>(
+              valueListenable: AuthService().isLoggedInNotifier,
+              builder: (context, isLoggedIn, _) {
+                return ValueListenableBuilder<int>(
+                  valueListenable: AuthService().xpNotifier,
+                  builder: (context, xp, _) {
+                    return ValueListenableBuilder<int>(
+                      valueListenable: AuthService().coinsNotifier,
+                      builder: (context, coins, _) {
+                        final isLocked = isLoggedIn &&
+                            (xp < MerchConfig.xpGateThreshold ||
+                                coins < totalCost);
+                        return PrimaryButton(
+                          text: isLocked ? 'LOCKED' : 'Proceed to Checkout',
+                          height: isCompact ? 50.0 : 60.0,
+                          onPressed:
+                              isLocked ? null : () => _handleCheckout(context),
+                          borderColor:
+                              isLocked ? AppTheme.redPrimary : null,
+                          textColor:
+                              isLocked ? AppTheme.redPrimary : null,
+                        );
+                      },
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),

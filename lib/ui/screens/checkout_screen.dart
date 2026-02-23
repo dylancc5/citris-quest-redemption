@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/typography.dart';
+import '../../widgets/common/svg_icon.dart';
 import '../../core/breakpoints.dart';
 import '../../backend/domain/models/shipping_address.dart';
+import '../../widgets/common/balance_display.dart';
 import '../../backend/services/cart_service.dart';
 import '../../backend/services/validation_service.dart';
 import '../../backend/services/order_processing_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
-import '../../widgets/common/balance_display.dart';
-import '../../painters/space_invader_painter.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
 import 'order_history_screen.dart';
@@ -229,6 +229,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // Persistent balance header
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.backgroundSecondary
+                                  .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppTheme.cyanAccent.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Balance: ',
+                                  style: AppTypography.caption1(context).copyWith(
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                                const BalanceDisplay(
+                                  size: BalanceSize.small,
+                                  showXp: false,
+                                  showCoins: true,
+                                  abbreviate: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
                           // Step indicator
                           _buildStepIndicator(),
                           const SizedBox(height: 24),
@@ -272,7 +305,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Expanded(
                                   child: Text(
                                     'All redemptions are final. No refunds or cancellations.',
-                                    style: TextStyle(color: Colors.orange),
+                                    style: AppTypography.caption1(context).copyWith(
+                                      color: Colors.orange,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -347,13 +382,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: 2,
               ),
             ),
-            child: Center(
-              child: Text(
-                '$number',
-                style: AppTypography.body(context).copyWith(
-                  color: isCompleted ? AppTheme.backgroundPrimary : AppTheme.cyanAccent,
-                  fontWeight: FontWeight.bold,
-                ),
+            alignment: Alignment.center,
+            child: Text(
+              '$number',
+              textAlign: TextAlign.center,
+              style: AppTypography.body(context).copyWith(
+                color: isCompleted ? AppTheme.backgroundPrimary : AppTheme.cyanAccent,
+                fontWeight: FontWeight.bold,
+                height: 1.0,
               ),
             ),
           ),
@@ -393,12 +429,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 120,
-              height: 100,
-              child: CustomPaint(
-                painter: SpaceInvaderPainter(color: AppTheme.cyanAccent),
-              ),
+            SvgIcon(
+              'space_invader',
+              size: 88,
+              color: AppTheme.cyanAccent,
+              fallbackIcon: Icons.videogame_asset,
             ),
             const SizedBox(height: 24),
             Text(
