@@ -10,14 +10,30 @@ enum BalanceSize {
   large, // For prominent displays (20px icons)
 }
 
-/// Reusable widget to display user XP and/or coin balance
-/// Automatically listens to AuthService notifiers and rebuilds on changes
+/// Formats a number with K/M suffix to prevent overflow in tight spaces.
+String _formatBalance(int value, {bool abbreviate = false}) {
+  if (!abbreviate) return '$value';
+  if (value >= 1000000) {
+    final m = value / 1000000;
+    return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1)}M';
+  }
+  if (value >= 10000) {
+    final k = value / 1000;
+    return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1)}K';
+  }
+  return '$value';
+}
+
+/// Reusable widget to display user XP and/or coin balance.
+/// Automatically listens to AuthService notifiers and rebuilds on changes.
 class BalanceDisplay extends StatelessWidget {
   final bool showXp;
   final bool showCoins;
   final BalanceSize size;
   final MainAxisAlignment alignment;
   final TextStyle? textStyle;
+  /// Abbreviate large numbers (e.g. 250000 → 250K). Defaults to true for small.
+  final bool? abbreviate;
 
   const BalanceDisplay({
     super.key,
@@ -26,6 +42,7 @@ class BalanceDisplay extends StatelessWidget {
     this.size = BalanceSize.medium,
     this.alignment = MainAxisAlignment.start,
     this.textStyle,
+    this.abbreviate,
   });
 
   double get _iconSize {
@@ -38,6 +55,8 @@ class BalanceDisplay extends StatelessWidget {
         return 20;
     }
   }
+
+  bool get _shouldAbbreviate => abbreviate ?? (size == BalanceSize.small);
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +76,13 @@ class BalanceDisplay extends StatelessWidget {
                 if (showXp) ...[
                   Icon(Icons.star, color: AppTheme.cyanAccent, size: _iconSize),
                   const SizedBox(width: 4),
-                  Text(
-                    '$xp XP',
-                    style: effectiveTextStyle.copyWith(
-                      color: AppTheme.cyanAccent,
+                  Flexible(
+                    child: Text(
+                      '${_formatBalance(xp, abbreviate: _shouldAbbreviate)} XP',
+                      style: effectiveTextStyle.copyWith(
+                        color: AppTheme.cyanAccent,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -69,10 +91,13 @@ class BalanceDisplay extends StatelessWidget {
                   Icon(Icons.monetization_on,
                       color: AppTheme.yellowPrimary, size: _iconSize),
                   const SizedBox(width: 4),
-                  Text(
-                    '$coins',
-                    style: effectiveTextStyle.copyWith(
-                      color: AppTheme.yellowPrimary,
+                  Flexible(
+                    child: Text(
+                      _formatBalance(coins, abbreviate: _shouldAbbreviate),
+                      style: effectiveTextStyle.copyWith(
+                        color: AppTheme.yellowPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

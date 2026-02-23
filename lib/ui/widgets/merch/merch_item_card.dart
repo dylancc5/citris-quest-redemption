@@ -28,221 +28,155 @@ class MerchItemCard extends StatelessWidget {
         ),
       ),
       child: HoverLiftCard(
-        child: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: AppTheme.cardBackgroundGradient,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: accentColor.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-            // Image/Icon
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(10),
-                  ),
-                ),
-                child: Icon(
-                  MerchConfig.getPlaceholderIcon(item.id),
-                  size: 80,
-                  color: accentColor,
-                ),
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppTheme.cardBackgroundGradient,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: accentColor.withValues(alpha: 0.3),
+              width: 2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.2),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image/Icon area
+              Expanded(
+                flex: 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(10),
+                    ),
+                  ),
+                  child: Icon(
+                    MerchConfig.getPlaceholderIcon(item.id),
+                    size: 60,
+                    color: accentColor,
+                  ),
+                ),
+              ),
 
-            // Content
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Name (centered)
-                    Text(
-                      item.name,
-                      style: AppTypography.title3(context).copyWith(
-                        color: Colors.white,
+              // Content area
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Name
+                      Text(
+                        item.name,
+                        style: AppTypography.title3(context).copyWith(
+                          color: Colors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
 
-                    const Spacer(),
-
-                    // Price row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.monetization_on,
-                              color: AppTheme.yellowPrimary,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${item.coinPrice}',
-                              style: AppTypography.body(context).copyWith(
+                      // Price row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.monetization_on,
                                 color: AppTheme.yellowPrimary,
-                                fontWeight: FontWeight.bold,
+                                size: 18,
                               ),
-                            ),
-                          ],
-                        ),
-                        Icon(
-                          Icons.arrow_forward,
-                          color: accentColor,
-                          size: 20,
-                        ),
-                      ],
-                    ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${item.coinPrice}',
+                                style: AppTypography.body(context).copyWith(
+                                  color: AppTheme.yellowPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: accentColor,
+                            size: 20,
+                          ),
+                        ],
+                      ),
 
-                    // Progress bars (only when logged in)
-                    ValueListenableBuilder<bool>(
-                      valueListenable: AuthService().isLoggedInNotifier,
-                      builder: (context, isLoggedIn, _) {
-                        if (!isLoggedIn) return const SizedBox.shrink();
+                      // Progress bars (only when logged in)
+                      ValueListenableBuilder<bool>(
+                        valueListenable: AuthService().isLoggedInNotifier,
+                        builder: (context, isLoggedIn, _) {
+                          if (!isLoggedIn) return const SizedBox.shrink();
 
-                        return ValueListenableBuilder<int>(
-                          valueListenable: AuthService().xpNotifier,
-                          builder: (context, xp, _) {
-                            return ValueListenableBuilder<int>(
-                              valueListenable: AuthService().coinsNotifier,
-                              builder: (context, coins, _) {
-                                final xpThreshold = MerchConfig.xpGateThreshold;
-                                final xpProgress = (xp / xpThreshold).clamp(0.0, 1.0);
-                                final hasEnoughXp = xp >= xpThreshold;
-                                final coinProgress = (coins / item.coinPrice).clamp(0.0, 1.0);
-                                final hasEnoughCoins = coins >= item.coinPrice;
+                          return ValueListenableBuilder<int>(
+                            valueListenable: AuthService().xpNotifier,
+                            builder: (context, xp, _) {
+                              return ValueListenableBuilder<int>(
+                                valueListenable: AuthService().coinsNotifier,
+                                builder: (context, coins, _) {
+                                  final xpThreshold = MerchConfig.xpGateThreshold;
+                                  final xpProgress = (xp / xpThreshold).clamp(0.0, 1.0);
+                                  final hasEnoughXp = xp >= xpThreshold;
+                                  final coinProgress =
+                                      (coins / item.coinPrice).clamp(0.0, 1.0);
+                                  final hasEnoughCoins = coins >= item.coinPrice;
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Column(
-                                    children: [
-                                      // XP progress bar (only show if user hasn't met threshold)
-                                      if (!hasEnoughXp) ...[
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Column(
+                                      children: [
+                                        // XP progress bar (only if not yet met)
+                                        if (!hasEnoughXp) ...[
+                                          _buildProgressBar(
+                                            context,
+                                            label: '$xp / $xpThreshold XP',
+                                            progress: xpProgress,
+                                            barColor: AppTheme.cyanAccent,
+                                            labelColor: Colors.white54,
+                                          ),
+                                          const SizedBox(height: 6),
+                                        ],
+                                        // Coins progress bar
                                         _buildProgressBar(
                                           context,
-                                          label: '$xp / $xpThreshold XP',
-                                          progress: xpProgress,
-                                          barColor: AppTheme.cyanAccent,
-                                          labelColor: Colors.white54,
+                                          label: hasEnoughCoins
+                                              ? 'Ready to redeem!'
+                                              : '$coins / ${item.coinPrice} coins',
+                                          progress: coinProgress,
+                                          barColor: hasEnoughCoins
+                                              ? AppTheme.greenPrimary
+                                              : AppTheme.yellowPrimary,
+                                          labelColor: hasEnoughCoins
+                                              ? AppTheme.greenPrimary
+                                              : Colors.white54,
                                         ),
-                                        const SizedBox(height: 4),
                                       ],
-                                      // Coins progress bar
-                                      _buildProgressBar(
-                                        context,
-                                        label: hasEnoughCoins
-                                            ? 'Ready to redeem!'
-                                            : '$coins / ${item.coinPrice} coins',
-                                        progress: coinProgress,
-                                        barColor: hasEnoughCoins
-                                            ? AppTheme.greenPrimary
-                                            : AppTheme.yellowPrimary,
-                                        labelColor: hasEnoughCoins
-                                            ? AppTheme.greenPrimary
-                                            : Colors.white54,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-            ),
-            // Badge overlay - UNLOCKED/LOCKED based on XP gate
-            Positioned(
-              top: 8,
-              right: 8,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: AuthService().isLoggedInNotifier,
-                builder: (context, isLoggedIn, _) {
-                  if (!isLoggedIn) return const SizedBox.shrink();
-
-                  return ValueListenableBuilder<int>(
-                    valueListenable: AuthService().xpNotifier,
-                    builder: (context, xp, _) {
-                      final hasEnoughXp = xp >= MerchConfig.xpGateThreshold;
-                      final badgeColor = hasEnoughXp
-                          ? AppTheme.greenPrimary
-                          : AppTheme.redPrimary;
-                      final badgeIcon = hasEnoughXp
-                          ? Icons.lock_open
-                          : Icons.lock;
-                      final badgeText = hasEnoughXp ? 'UNLOCKED' : 'LOCKED';
-
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: badgeColor.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              badgeIcon,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              badgeText,
-                              style: AppTypography.caption2(context).copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

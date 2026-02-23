@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: const TextStyle(color: Colors.red),
+                                style: AppTypography.caption1(context).copyWith(color: Colors.red),
                               ),
                             ),
                           ],

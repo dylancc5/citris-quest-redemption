@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/typography.dart';
 import '../../core/breakpoints.dart';
@@ -6,10 +7,12 @@ import '../../core/constants/merch_config.dart';
 import '../../backend/data/auth_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/balance_display.dart';
+import '../../widgets/common/primary_button.dart';
+import '../../widgets/common/svg_icon.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import '../widgets/merch/merch_item_card.dart';
-import '../../painters/space_invader_painter.dart';
 import 'cart_screen.dart';
+import 'login_screen.dart';
 import 'order_history_screen.dart';
 
 /// Landing screen with hero section, how-it-works, and merch grid
@@ -29,7 +32,6 @@ class _LandingScreenState extends State<LandingScreen>
   @override
   void initState() {
     super.initState();
-    // Floating animation for Space Invader icon
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -82,20 +84,14 @@ class _LandingScreenState extends State<LandingScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Hero section
                         _buildHeroSection(context),
                         SizedBox(height: Breakpoints.sectionSpacing(context)),
-
-                        // How it works
                         _buildHowItWorks(context),
                         SizedBox(height: Breakpoints.sectionSpacing(context)),
-
-                        // Merch items grid
                         _buildMerchGrid(context),
                         SizedBox(height: Breakpoints.cardSpacing(context) * 2),
-
-                        // Footer
                         _buildFooter(context),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -110,10 +106,11 @@ class _LandingScreenState extends State<LandingScreen>
 
   Widget _buildHeroSection(BuildContext context) {
     final isMobile = Breakpoints.isMobile(context);
+    final invaderSize = isMobile ? 48.0 : 66.0;
 
     return Column(
       children: [
-        // Floating Space Invader icon
+        // Floating Space Invader SVG icon
         AnimatedBuilder(
           animation: _floatAnimation,
           builder: (context, child) {
@@ -129,11 +126,11 @@ class _LandingScreenState extends State<LandingScreen>
                     ),
                   ],
                 ),
-                child: CustomPaint(
-                  size: Size(isMobile ? 55 : 66, isMobile ? 40 : 48),
-                  painter: SpaceInvaderPainter(
-                    color: AppTheme.cyanAccent,
-                  ),
+                child: SvgIcon(
+                  'space_invader',
+                  size: invaderSize,
+                  color: AppTheme.cyanAccent,
+                  fallbackIcon: Icons.videogame_asset,
                 ),
               ),
             );
@@ -168,35 +165,70 @@ class _LandingScreenState extends State<LandingScreen>
         // Subtitle
         Text(
           'Redeem your in-game coins for exclusive merch',
-          style: AppTypography.body(context).copyWith(
-            color: Colors.white70,
-          ),
+          style: AppTypography.body(context).copyWith(color: Colors.white70),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
 
-        // Balance display
-        ValueListenableBuilder(
+        // Login CTA or balance display
+        ValueListenableBuilder<bool>(
           valueListenable: AuthService().isLoggedInNotifier,
           builder: (context, isLoggedIn, _) {
             if (!isLoggedIn) {
-              return Text(
-                'Log in to view your balance',
-                style: AppTypography.caption1(context).copyWith(
-                  color: Colors.white54,
-                ),
-                textAlign: TextAlign.center,
-              );
+              return _buildLoginCta(context);
             }
-
-            return BalanceDisplay(
-              size: BalanceSize.large,
-              alignment: MainAxisAlignment.center,
-              textStyle: AppTypography.body(context).copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            return Column(
+              children: [
+                BalanceDisplay(
+                  size: BalanceSize.large,
+                  alignment: MainAxisAlignment.center,
+                  abbreviate: false,
+                  textStyle: AppTypography.body(context).copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Welcome back, ${AuthService().username ?? 'Player'}!',
+                  style: AppTypography.caption1(context).copyWith(
+                    color: Colors.white54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             );
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginCta(BuildContext context) {
+    final isMobile = Breakpoints.isMobile(context);
+    return Column(
+      children: [
+        Text(
+          'Sign in to track your balance and redeem coins for merch',
+          style: AppTypography.body(context).copyWith(color: Colors.white70),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        PrimaryButton(
+          text: 'Sign In to Get Started',
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          ),
+          borderColor: AppTheme.cyanAccent,
+          textColor: AppTheme.cyanAccent,
+          width: isMobile ? double.infinity : 320,
+          height: 56,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Already playing CITRIS Quest? Use your game account to sign in.',
+          style: AppTypography.caption1(context).copyWith(color: Colors.white38),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -217,47 +249,38 @@ class _LandingScreenState extends State<LandingScreen>
         ),
         SizedBox(height: isMobile ? 24 : 32),
 
-        // Steps
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (isMobile) {
-              // Vertical layout on mobile
-              return Column(
+        isMobile
+            ? Column(
                 children: [
                   _buildStep(context, 1, Icons.star, 'Earn Coins',
                       'Scan artworks in the CITRIS Quest app', AppTheme.cyanAccent),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildStep(context, 2, Icons.shopping_bag, 'Browse Merch',
                       'Choose from exclusive CITRIS items', AppTheme.magentaPrimary),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildStep(context, 3, Icons.local_shipping, 'Get It Shipped',
                       'Redeem coins and receive your merch', AppTheme.greenPrimary),
                 ],
-              );
-            }
-
-            // Horizontal layout on tablet/desktop
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _buildStep(context, 1, Icons.star, 'Earn Coins',
-                      'Scan artworks in the CITRIS Quest app', AppTheme.cyanAccent),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: _buildStep(context, 2, Icons.shopping_bag, 'Browse Merch',
-                      'Choose from exclusive CITRIS items', AppTheme.magentaPrimary),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: _buildStep(context, 3, Icons.local_shipping, 'Get It Shipped',
-                      'Redeem coins and receive your merch', AppTheme.greenPrimary),
-                ),
-              ],
-            );
-          },
-        ),
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildStep(context, 1, Icons.star, 'Earn Coins',
+                        'Scan artworks in the CITRIS Quest app', AppTheme.cyanAccent),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildStep(context, 2, Icons.shopping_bag, 'Browse Merch',
+                        'Choose from exclusive CITRIS items', AppTheme.magentaPrimary),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildStep(context, 3, Icons.local_shipping, 'Get It Shipped',
+                        'Redeem coins and receive your merch', AppTheme.greenPrimary),
+                  ),
+                ],
+              ),
       ],
     );
   }
@@ -269,45 +292,42 @@ class _LandingScreenState extends State<LandingScreen>
       decoration: BoxDecoration(
         gradient: AppTheme.cardBackgroundGradient,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 2,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
         boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 12,
-          ),
+          BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 12),
         ],
       ),
       child: Column(
         children: [
-          // Number badge
+          // Number circle
           Container(
-            width: 32,
-            height: 32,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 2),
             ),
-            child: Center(
+            alignment: Alignment.center,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 3, left: 3),
               child: Text(
                 '$number',
+                textAlign: TextAlign.center,
                 style: AppTypography.title3(context).copyWith(
+                  fontSize: 28,
                   color: color,
                   fontWeight: FontWeight.bold,
+                  height: 1.0,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
-          // Icon
           Icon(icon, color: color, size: 40),
           const SizedBox(height: 12),
 
-          // Title
           Text(
             title,
             style: AppTypography.title3(context).copyWith(color: color),
@@ -315,12 +335,9 @@ class _LandingScreenState extends State<LandingScreen>
           ),
           const SizedBox(height: 8),
 
-          // Description
           Text(
             description,
-            style: AppTypography.caption1(context).copyWith(
-              color: Colors.white70,
-            ),
+            style: AppTypography.caption1(context).copyWith(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
         ],
@@ -334,51 +351,93 @@ class _LandingScreenState extends State<LandingScreen>
     final double childAspectRatio;
 
     if (Breakpoints.isMobile(context)) {
-      // Single column on mobile - wider cards, less tall
-      crossAxisCount = screenWidth < 400 ? 1 : 2;
-      childAspectRatio = screenWidth < 400 ? 0.85 : 0.65;
+      crossAxisCount = screenWidth < 420 ? 1 : 2;
+      childAspectRatio = screenWidth < 420 ? 0.9 : 0.55;
     } else if (Breakpoints.isTablet(context)) {
-      // 2-3 columns on tablet depending on width
       crossAxisCount = screenWidth < 900 ? 2 : 3;
-      childAspectRatio = 0.68;
+      childAspectRatio = 0.55;
     } else {
       crossAxisCount = 4;
-      childAspectRatio = 0.68;
+      childAspectRatio = 0.55;
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: Breakpoints.cardSpacing(context),
-        mainAxisSpacing: Breakpoints.cardSpacing(context),
-        childAspectRatio: childAspectRatio,
-      ),
-      itemCount: MerchConfig.items.length,
-      itemBuilder: (context, index) {
-        return MerchItemCard(item: MerchConfig.items[index]);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'MERCH',
+          style: AppTypography.title2(context).copyWith(
+            color: AppTheme.cyanAccent,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: Breakpoints.cardSpacing(context),
+            mainAxisSpacing: Breakpoints.cardSpacing(context),
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: MerchConfig.items.length,
+          itemBuilder: (context, index) {
+            return MerchItemCard(item: MerchConfig.items[index]);
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildFooter(BuildContext context) {
-    return Center(
-      child: TextButton.icon(
-        icon: const Icon(Icons.videogame_asset, size: 18),
-        label: const Text('Need more coins? Play CITRIS Quest'),
-        onPressed: () {
-          // Could link to the landing page or TestFlight
-          // For now, just show info
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Download CITRIS Quest on TestFlight to earn coins!'),
-              backgroundColor: AppTheme.bluePrimary,
-            ),
-          );
-        },
-        style: TextButton.styleFrom(
-          foregroundColor: AppTheme.cyanAccent,
+    return Center(child: _HoverFooterLink());
+  }
+}
+
+class _HoverFooterLink extends StatefulWidget {
+  const _HoverFooterLink();
+
+  @override
+  State<_HoverFooterLink> createState() => _HoverFooterLinkState();
+}
+
+class _HoverFooterLinkState extends State<_HoverFooterLink> {
+  bool _isHovered = false;
+
+  Future<void> _launch() async {
+    final uri = Uri.parse('https://dylancc5.github.io/citris-quest-landing/');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _isHovered ? AppTheme.magentaPrimary : AppTheme.cyanAccent;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: _launch,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: AppTypography.body(context).copyWith(
+            color: color,
+            decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+            decorationColor: color,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.videogame_asset, size: 18, color: color),
+              const SizedBox(width: 8),
+              const Text('Play CITRIS Quest to Earn More Coins'),
+              const SizedBox(width: 4),
+              Icon(Icons.open_in_new, size: 14, color: color),
+            ],
+          ),
         ),
       ),
     );
