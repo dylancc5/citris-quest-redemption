@@ -17,7 +17,7 @@ String _formatBalance(int value, {bool abbreviate = false}) {
     final m = value / 1000000;
     return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1)}M';
   }
-  if (value >= 10000) {
+  if (value >= 1000) {
     final k = value / 1000;
     return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1)}K';
   }

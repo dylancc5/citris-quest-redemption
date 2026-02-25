@@ -97,9 +97,7 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             valueListenable: AuthService().isLoggedInNotifier,
             builder: (context, isLoggedIn, _) {
               if (!isLoggedIn) return const SizedBox.shrink();
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 200),
-                child: Padding(
+              return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -118,9 +116,9 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
                       size: BalanceSize.small,
                       showXp: true,
                       showCoins: true,
+                      abbreviate: true,
                     ),
                   ),
-                ),
               );
             },
           ),
@@ -158,9 +156,7 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             valueListenable: AuthService().isLoggedInNotifier,
             builder: (context, isLoggedIn, _) {
               if (!isLoggedIn) return const SizedBox.shrink();
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 200),
-                child: Padding(
+              return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -179,9 +175,9 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
                       size: BalanceSize.small,
                       showXp: true,
                       showCoins: true,
+                      abbreviate: true,
                     ),
                   ),
-                ),
               );
             },
           ),
