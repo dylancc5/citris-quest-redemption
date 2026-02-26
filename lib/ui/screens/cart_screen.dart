@@ -478,7 +478,7 @@ class _CartItemCard extends StatelessWidget {
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.delete_outline, size: 16),
-                        label: const Text('Remove'),
+                        label: Text('Remove', style: AppTypography.caption1(context).copyWith(color: Colors.red)),
                         onPressed: () {
                           CartService().removeItem(cartItem.id);
                         },

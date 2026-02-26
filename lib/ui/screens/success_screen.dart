@@ -419,7 +419,7 @@ class _SuccessScreenState extends State<SuccessScreen> with SingleTickerProvider
                         );
                       },
                       icon: const Icon(Icons.storefront),
-                      label: const Text('Return to Shop'),
+                      label: Text('Return to Shop', style: AppTypography.body(context).copyWith(color: AppTheme.cyanAccent)),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.cyanAccent,
                       ),

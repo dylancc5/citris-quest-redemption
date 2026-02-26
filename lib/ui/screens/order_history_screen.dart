@@ -117,7 +117,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Start Shopping'),
+              child: Text('Start Shopping', style: AppTypography.body(context).copyWith(color: AppTheme.cyanAccent)),
             ),
           ],
         ),

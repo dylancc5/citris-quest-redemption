@@ -538,7 +538,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               MaterialPageRoute(builder: (_) => const CartScreen()),
             ),
             style: TextButton.styleFrom(foregroundColor: AppTheme.greenPrimary),
-            child: const Text('View Cart'),
+            child: Text('View Cart', style: AppTypography.body(context).copyWith(color: AppTheme.greenPrimary)),
           ),
         ],
       ),

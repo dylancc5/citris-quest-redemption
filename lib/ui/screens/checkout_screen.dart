@@ -209,14 +209,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             Icon(Icons.error_outline, color: Colors.red),
             const SizedBox(width: 12),
-            const Text('Error'),
+            Text('Error', style: AppTypography.title3(context)),
           ],
         ),
-        content: Text(message),
+        content: Text(message, style: AppTypography.body(context)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text('OK', style: AppTypography.body(context).copyWith(color: AppTheme.cyanAccent)),
           ),
         ],
       ),
@@ -369,7 +369,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               MaterialPageRoute(builder: (_) => const CartScreen()),
                             ),
                             icon: const Icon(Icons.arrow_back),
-                            label: const Text('Back to Cart'),
+                            label: Text('Back to Cart', style: AppTypography.body(context).copyWith(color: AppTheme.cyanAccent)),
                             style: TextButton.styleFrom(
                               foregroundColor: AppTheme.cyanAccent,
                             ),

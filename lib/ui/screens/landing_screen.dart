@@ -336,7 +336,7 @@ class _LandingScreenState extends State<LandingScreen>
 
           Text(
             description,
-            style: AppTypography.caption1(context).copyWith(color: Colors.white70),
+            style: AppTypography.body(context).copyWith(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
         ],
