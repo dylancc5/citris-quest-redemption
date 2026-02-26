@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../domain/models/cart_item.dart';
+import '../domain/models/merch_item.dart';
 import '../domain/models/shipping_address.dart';
 import '../../core/constants/env.dart';
 import '../../core/constants/merch_config.dart';
@@ -175,28 +176,46 @@ class PrintifyService {
     };
   }
 
-  /// Get Printify variant ID based on item type and size
+  /// Get Printify variant ID based on item type and size.
   ///
-  /// For now, returns placeholder. Dylan will need to provide actual variant IDs
-  /// from Printify dashboard based on product + size combinations.
+  /// Variant IDs sourced from the live Printify shop (shop ID: 26314802).
+  /// Last verified: 2026-02-24.
   int _getVariantId(CartItem cartItem) {
-    // TODO: Replace with actual Printify variant IDs from Dylan
-    // Format: product_id -> size -> variant_id mapping
+    switch (cartItem.item.type) {
+      case MerchItemType.shirt:
+        // product_id: 697e6475e5c7a4d672063ad5
+        // Black unisex tee — size → variant_id
+        switch (cartItem.selectedSize) {
+          case 'XS':  return 67831;
+          case 'S':   return 38164;
+          case 'M':   return 38178;
+          case 'L':   return 38192;
+          case 'XL':  return 38206;
+          case '2XL': return 38220;
+          case '3XL': return 42122;
+          case '4XL': return 66213;
+          case '5XL': return 95180;
+          default:
+            throw PrintifyApiException(
+              'Unknown shirt size: ${cartItem.selectedSize}',
+            );
+        }
 
-    if (cartItem.item.id == 'shirt' && cartItem.selectedSize != null) {
-      // Example mapping (replace with real IDs):
-      // S: 12345, M: 12346, L: 12347, XL: 12348, 2XL: 12349
-      switch (cartItem.selectedSize) {
-        case 'S': return 12345;
-        case 'M': return 12346;
-        case 'L': return 12347;
-        case 'XL': return 12348;
-        case '2XL': return 12349;
-      }
+      case MerchItemType.magnet:
+        // product_id: 699a3f65e570108ad6072c53
+        // 2" x 2" Die-Cut
+        return 76774;
+
+      case MerchItemType.keychain:
+        // product_id: 698fac47ea7b7f223102b3b5
+        // Silver / 3" x 3"
+        return 149431;
+
+      case MerchItemType.sticker:
+        // product_id: 697e623754febb0e950e47fc
+        // 2" × 2" White vinyl decal
+        return 45748;
     }
-
-    // For non-shirt items, return placeholder variant ID
-    return 99999; // Replace with actual variant IDs
   }
 }
 
