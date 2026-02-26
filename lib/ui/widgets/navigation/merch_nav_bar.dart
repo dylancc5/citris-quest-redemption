@@ -99,24 +99,26 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
               if (!isLoggedIn) return const SizedBox.shrink();
               return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.cyanAccent.withValues(alpha: 0.3),
-                        width: 1,
+                  child: IntrinsicWidth(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
-                    child: const BalanceDisplay(
-                      size: BalanceSize.small,
-                      showXp: true,
-                      showCoins: true,
-                      abbreviate: true,
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: const BalanceDisplay(
+                        size: BalanceSize.small,
+                        showXp: true,
+                        showCoins: true,
+                        abbreviate: false,
+                      ),
                     ),
                   ),
               );
@@ -158,24 +160,26 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
               if (!isLoggedIn) return const SizedBox.shrink();
               return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.cyanAccent.withValues(alpha: 0.3),
-                        width: 1,
+                  child: IntrinsicWidth(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
-                    child: const BalanceDisplay(
-                      size: BalanceSize.small,
-                      showXp: true,
-                      showCoins: true,
-                      abbreviate: true,
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: const BalanceDisplay(
+                        size: BalanceSize.small,
+                        showXp: true,
+                        showCoins: true,
+                        abbreviate: false,
+                      ),
                     ),
                   ),
               );
@@ -278,6 +282,10 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             tooltip: 'Account',
             color: AppTheme.backgroundSecondary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: AppTheme.cyanAccent, width: 1),
+            ),
             itemBuilder: (context) => <PopupMenuEntry<void>>[
               PopupMenuItem<void>(
                 enabled: false,
@@ -287,15 +295,6 @@ class MerchNavBar extends StatelessWidget implements PreferredSizeWidget {
                     fontSize: 15,
                     color: AppTheme.cyanAccent,
                   ),
-                ),
-              ),
-              // Balance row in dropdown (always visible, useful on mobile too)
-              PopupMenuItem<void>(
-                enabled: false,
-                child: const BalanceDisplay(
-                  size: BalanceSize.small,
-                  showXp: true,
-                  showCoins: true,
                 ),
               ),
               const PopupMenuDivider(),

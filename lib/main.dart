@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/env.dart';
 import 'core/theme.dart';
 import 'backend/data/auth_service.dart';
-import 'painters/space_invader_painter.dart';
+import 'backend/services/cart_service.dart';
+import 'widgets/common/svg_icon.dart';
 import 'ui/screens/landing_screen.dart';
 
 void main() async {
@@ -23,6 +24,7 @@ void main() async {
 
     // Initialize AuthService to check for existing session
     await AuthService().initialize();
+    await CartService().loadSavedCart();
   } else {
     debugPrint('WARNING: Supabase environment variables not configured');
     debugPrint('Missing: ${Env.getMissingVars()}');
@@ -125,11 +127,11 @@ class _FontLoaderState extends State<_FontLoader>
                           ),
                         ],
                       ),
-                      child: CustomPaint(
-                        size: const Size(66, 48),
-                        painter: SpaceInvaderPainter(
-                          color: AppTheme.cyanAccent,
-                        ),
+                      child: SvgIcon(
+                        'space_invader',
+                        size: 66,
+                        color: AppTheme.cyanAccent,
+                        fallbackIcon: Icons.videogame_asset,
                       ),
                     );
                   },

@@ -6,11 +6,11 @@ import '../../core/breakpoints.dart';
 import '../../core/constants/merch_config.dart';
 import '../../backend/data/auth_service.dart';
 import '../../widgets/common/animated_starfield.dart';
-import '../../widgets/common/balance_display.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/svg_icon.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import '../widgets/merch/merch_item_card.dart';
+import '../../backend/data/merch_data_service.dart';
 import 'cart_screen.dart';
 import 'login_screen.dart';
 import 'order_history_screen.dart';
@@ -29,6 +29,9 @@ class _LandingScreenState extends State<LandingScreen>
   late AnimationController _floatController;
   late Animation<double> _floatAnimation;
 
+  // item_id → ordered list of public image URLs from asset_metadata
+  Map<String, List<String>> _merchImageUrls = {};
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +43,16 @@ class _LandingScreenState extends State<LandingScreen>
     _floatAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
+
+    _fetchMerchImages();
+  }
+
+  void _fetchMerchImages() {
+    MerchDataService().fetchMerchImageUrls().then((urls) {
+      if (mounted && urls.isNotEmpty) {
+        setState(() => _merchImageUrls = urls);
+      }
+    });
   }
 
   @override
@@ -85,7 +98,7 @@ class _LandingScreenState extends State<LandingScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildHeroSection(context),
-                        SizedBox(height: Breakpoints.sectionSpacing(context)),
+                        SizedBox(height: Breakpoints.sectionSpacing(context) * 0.5),
                         _buildHowItWorks(context),
                         SizedBox(height: Breakpoints.sectionSpacing(context)),
                         _buildMerchGrid(context),
@@ -110,6 +123,7 @@ class _LandingScreenState extends State<LandingScreen>
 
     return Column(
       children: [
+        SizedBox(height: Breakpoints.sectionSpacing(context) * 0.5),
         // Floating Space Invader SVG icon
         AnimatedBuilder(
           animation: _floatAnimation,
@@ -179,15 +193,6 @@ class _LandingScreenState extends State<LandingScreen>
             }
             return Column(
               children: [
-                BalanceDisplay(
-                  size: BalanceSize.large,
-                  alignment: MainAxisAlignment.center,
-                  abbreviate: false,
-                  textStyle: AppTypography.body(context).copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
                 Text(
                   'Welcome back, ${AuthService().username ?? 'Player'}!',
                   style: AppTypography.caption1(context).copyWith(
@@ -223,12 +228,6 @@ class _LandingScreenState extends State<LandingScreen>
           textColor: AppTheme.cyanAccent,
           width: isMobile ? double.infinity : 320,
           height: 56,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Already playing CITRIS Quest? Use your game account to sign in.',
-          style: AppTypography.caption1(context).copyWith(color: Colors.white38),
-          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -347,18 +346,18 @@ class _LandingScreenState extends State<LandingScreen>
 
   Widget _buildMerchGrid(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final int crossAxisCount;
-    final double childAspectRatio;
+    final spacing = Breakpoints.cardSpacing(context);
 
+    final double cardWidth;
     if (Breakpoints.isMobile(context)) {
-      crossAxisCount = screenWidth < 420 ? 1 : 2;
-      childAspectRatio = screenWidth < 420 ? 0.9 : 0.55;
+      cardWidth = screenWidth < 420
+          ? double.infinity
+          : (screenWidth - spacing * 3) / 2;
     } else if (Breakpoints.isTablet(context)) {
-      crossAxisCount = screenWidth < 900 ? 2 : 3;
-      childAspectRatio = 0.55;
+      final cols = screenWidth < 900 ? 2 : 3;
+      cardWidth = (screenWidth - spacing * (cols + 1)) / cols;
     } else {
-      crossAxisCount = 4;
-      childAspectRatio = 0.55;
+      cardWidth = (screenWidth.clamp(0, 1200) - spacing * 5) / 4;
     }
 
     return Column(
@@ -372,19 +371,19 @@ class _LandingScreenState extends State<LandingScreen>
           ),
         ),
         const SizedBox(height: 16),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: Breakpoints.cardSpacing(context),
-            mainAxisSpacing: Breakpoints.cardSpacing(context),
-            childAspectRatio: childAspectRatio,
-          ),
-          itemCount: MerchConfig.items.length,
-          itemBuilder: (context, index) {
-            return MerchItemCard(item: MerchConfig.items[index]);
-          },
+        _buildXpGateBanner(context),
+        Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: MerchConfig.items.map((item) {
+            return SizedBox(
+              width: cardWidth == double.infinity ? double.infinity : cardWidth,
+              child: MerchItemCard(
+                item: item,
+                imageUrls: _merchImageUrls[item.id] ?? [],
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -392,6 +391,112 @@ class _LandingScreenState extends State<LandingScreen>
 
   Widget _buildFooter(BuildContext context) {
     return Center(child: _HoverFooterLink());
+  }
+
+  Widget _buildXpGateBanner(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: AuthService().isLoggedInNotifier,
+      builder: (context, isLoggedIn, _) {
+        if (!isLoggedIn) return const SizedBox.shrink();
+
+        return ValueListenableBuilder<int>(
+          valueListenable: AuthService().xpNotifier,
+          builder: (context, xp, _) {
+            final threshold = MerchConfig.xpGateThreshold;
+            final hasEnoughXp = xp >= threshold;
+
+            return AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: hasEnoughXp
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundSecondary.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.cyanAccent.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.cyanAccent.withValues(alpha: 0.15),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Header row: lock icon + label + XP counter
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline,
+                                  size: 16,
+                                  color: Colors.white54,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'MERCH LOCKED',
+                                  style: AppTypography.caption1(context).copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '$xp / $threshold XP',
+                                  style: AppTypography.caption1(context).copyWith(
+                                    color: AppTheme.cyanAccent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            // Description
+                            Text(
+                              'Reach $threshold XP in CITRIS Quest to unlock the merch shop.',
+                              style: AppTypography.caption2(context).copyWith(
+                                color: Colors.white54,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            // Progress bar
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: (xp / threshold).clamp(0.0, 1.0),
+                                minHeight: 8,
+                                backgroundColor: AppTheme.backgroundSecondary,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.cyanAccent,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Percentage label
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '${((xp / threshold) * 100).clamp(0, 100).toStringAsFixed(1)}%',
+                                style: AppTypography.caption2(context).copyWith(
+                                  color: Colors.white54,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            );
+          },
+        );
+      },
+    );
   }
 }
 

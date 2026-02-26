@@ -34,12 +34,22 @@ class MerchConfig {
   }
 
   // Placeholder icon mappings (Material Icons as strings)
-  // These will be replaced with actual product images later
+  // Used as fallback when no remote images are available
   static const Map<String, IconData> placeholderIcons = {
     'shirt': Icons.checkroom,
     'magnet': Icons.rectangle,
     'sticker': Icons.star,
     'keychain': Icons.vpn_key,
+  };
+
+  // Asset keys for remote product photos stored in game_assets / asset_metadata.
+  // Naming convention: 'merch_images/{item_id}_{index}'
+  // Add keys here when you add photos via the upload script.
+  static const Map<String, List<String>> imageAssetKeys = {
+    'shirt': [],
+    'magnet': [],
+    'sticker': [],
+    'keychain': [],
   };
 
   // Merch items catalog
@@ -51,10 +61,11 @@ class MerchConfig {
           'Premium retro pixel-art design celebrating 25 years of CITRIS innovation. '
           'Comfortable cotton blend, perfect for scanning artworks in style.',
       coinPrice: pricing['shirt']!,
-      imageUrl: 'shirt', // Will use placeholderIcons['shirt']
+      imageUrl: 'shirt',
       type: MerchItemType.shirt,
       sizes: shirtSizes,
-      printifyProductId: 'PRINTIFY_SHIRT_ID', // Placeholder - update with real ID from Dylan
+      printifyProductId: 'PRINTIFY_SHIRT_ID',
+      imageAssetKeys: imageAssetKeys['shirt'],
     ),
     MerchItem(
       id: 'magnet',
@@ -63,9 +74,10 @@ class MerchConfig {
           'Space Invader pixel art magnet for your fridge or locker. '
           'Show off your CITRIS Quest achievements IRL.',
       coinPrice: pricing['magnet']!,
-      imageUrl: 'magnet', // Will use placeholderIcons['magnet']
+      imageUrl: 'magnet',
       type: MerchItemType.magnet,
-      printifyProductId: 'PRINTIFY_MAGNET_ID', // Placeholder
+      printifyProductId: 'PRINTIFY_MAGNET_ID',
+      imageAssetKeys: imageAssetKeys['magnet'],
     ),
     MerchItem(
       id: 'sticker',
@@ -74,9 +86,10 @@ class MerchConfig {
           'Weatherproof vinyl stickers featuring retro game characters. '
           'Includes 5 unique designs from the CITRIS Quest universe.',
       coinPrice: pricing['sticker']!,
-      imageUrl: 'sticker', // Will use placeholderIcons['sticker']
+      imageUrl: 'sticker',
       type: MerchItemType.sticker,
-      printifyProductId: 'PRINTIFY_STICKER_ID', // Placeholder
+      printifyProductId: 'PRINTIFY_STICKER_ID',
+      imageAssetKeys: imageAssetKeys['sticker'],
     ),
     MerchItem(
       id: 'keychain',
@@ -85,9 +98,10 @@ class MerchConfig {
           'Premium acrylic keychain with CITRIS branding. '
           'Durable and stylish - keep CITRIS Quest with you everywhere.',
       coinPrice: pricing['keychain']!,
-      imageUrl: 'keychain', // Will use placeholderIcons['keychain']
+      imageUrl: 'keychain',
       type: MerchItemType.keychain,
-      printifyProductId: 'PRINTIFY_KEYCHAIN_ID', // Placeholder
+      printifyProductId: 'PRINTIFY_KEYCHAIN_ID',
+      imageAssetKeys: imageAssetKeys['keychain'],
     ),
   ];
 

@@ -14,6 +14,7 @@ class MerchItem {
   final MerchItemType type;
   final List<String>? sizes; // Only for shirts
   final String printifyProductId; // Printify API product ID
+  final List<String>? imageAssetKeys; // asset_metadata keys e.g. ['merch_images/shirt_1']
 
   const MerchItem({
     required this.id,
@@ -24,9 +25,12 @@ class MerchItem {
     required this.type,
     this.sizes,
     required this.printifyProductId,
+    this.imageAssetKeys,
   });
 
   bool get requiresSize => type == MerchItemType.shirt && sizes != null;
+
+  bool get hasImages => imageAssetKeys != null && imageAssetKeys!.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'id': id,

@@ -6,29 +6,42 @@ import '../../../backend/data/auth_service.dart';
 import '../../../backend/domain/models/merch_item.dart';
 import '../../../widgets/common/hover_lift_card.dart';
 import '../../screens/item_detail_screen.dart';
+import 'merch_image_widget.dart';
 
 /// Card displaying a single merch item
 class MerchItemCard extends StatelessWidget {
   final MerchItem item;
+  final List<String> imageUrls;
 
   const MerchItemCard({
     super.key,
     required this.item,
+    this.imageUrls = const [],
   });
 
   @override
   Widget build(BuildContext context) {
     final accentColor = MerchConfig.getAccentColor(item.id);
 
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ItemDetailScreen(item: item),
-        ),
-      ),
-      child: HoverLiftCard(
-        child: Container(
+    return ValueListenableBuilder<bool>(
+      valueListenable: AuthService().isLoggedInNotifier,
+      builder: (context, isLoggedIn, _) {
+        return ValueListenableBuilder<int>(
+          valueListenable: AuthService().xpNotifier,
+          builder: (context, xp, _) {
+            final isXpLocked = isLoggedIn && xp < MerchConfig.xpGateThreshold;
+
+            return GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ItemDetailScreen(item: item, imageUrls: imageUrls),
+                ),
+              ),
+              child: Opacity(
+                opacity: isXpLocked ? 0.45 : 1.0,
+                child: HoverLiftCard(
+                  child: Container(
           decoration: BoxDecoration(
             gradient: AppTheme.cardBackgroundGradient,
             borderRadius: BorderRadius.circular(12),
@@ -47,9 +60,9 @@ class MerchItemCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image/Icon area
-              Expanded(
-                flex: 2,
+              // Image/Icon area — fixed height
+              SizedBox(
+                height: 140,
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
@@ -57,22 +70,21 @@ class MerchItemCard extends StatelessWidget {
                       top: Radius.circular(10),
                     ),
                   ),
-                  child: Icon(
-                    MerchConfig.getPlaceholderIcon(item.id),
-                    size: 60,
-                    color: accentColor,
+                  child: MerchImageWidget(
+                    item: item,
+                    imageUrls: imageUrls,
+                    showCarousel: false,
+                    iconSize: 60,
                   ),
                 ),
               ),
 
-              // Content area
-              Expanded(
-                flex: 3,
-                child: Padding(
+              // Content area — sizes to content
+              Padding(
                   padding: const EdgeInsets.all(10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       // Name
                       Text(
@@ -84,6 +96,8 @@ class MerchItemCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                       ),
+
+                      const SizedBox(height: 8),
 
                       // Price row
                       Row(
@@ -114,7 +128,7 @@ class MerchItemCard extends StatelessWidget {
                         ],
                       ),
 
-                      // Progress bars (only when logged in)
+                      // Coin progress bar (only when logged in)
                       ValueListenableBuilder<bool>(
                         valueListenable: AuthService().isLoggedInNotifier,
                         builder: (context, isLoggedIn, _) {
@@ -126,43 +140,26 @@ class MerchItemCard extends StatelessWidget {
                               return ValueListenableBuilder<int>(
                                 valueListenable: AuthService().coinsNotifier,
                                 builder: (context, coins, _) {
-                                  final xpThreshold = MerchConfig.xpGateThreshold;
-                                  final xpProgress = (xp / xpThreshold).clamp(0.0, 1.0);
-                                  final hasEnoughXp = xp >= xpThreshold;
+                                  final hasEnoughXp = xp >= MerchConfig.xpGateThreshold;
                                   final coinProgress =
                                       (coins / item.coinPrice).clamp(0.0, 1.0);
                                   final hasEnoughCoins = coins >= item.coinPrice;
+                                  final isReady = hasEnoughXp && hasEnoughCoins;
 
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8),
-                                    child: Column(
-                                      children: [
-                                        // XP progress bar (only if not yet met)
-                                        if (!hasEnoughXp) ...[
-                                          _buildProgressBar(
-                                            context,
-                                            label: '$xp / $xpThreshold XP',
-                                            progress: xpProgress,
-                                            barColor: AppTheme.cyanAccent,
-                                            labelColor: Colors.white54,
-                                          ),
-                                          const SizedBox(height: 6),
-                                        ],
-                                        // Coins progress bar
-                                        _buildProgressBar(
-                                          context,
-                                          label: hasEnoughCoins
-                                              ? 'Ready to redeem!'
-                                              : '$coins / ${item.coinPrice} coins',
-                                          progress: coinProgress,
-                                          barColor: hasEnoughCoins
-                                              ? AppTheme.greenPrimary
-                                              : AppTheme.yellowPrimary,
-                                          labelColor: hasEnoughCoins
-                                              ? AppTheme.greenPrimary
-                                              : Colors.white54,
-                                        ),
-                                      ],
+                                    child: _buildProgressBar(
+                                      context,
+                                      label: isReady
+                                          ? 'Ready to redeem!'
+                                          : '$coins / ${item.coinPrice} coins',
+                                      progress: coinProgress,
+                                      barColor: isReady
+                                          ? AppTheme.greenPrimary
+                                          : AppTheme.yellowPrimary,
+                                      labelColor: isReady
+                                          ? AppTheme.greenPrimary
+                                          : Colors.white54,
                                     ),
                                   );
                                 },
@@ -174,11 +171,15 @@ class MerchItemCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
             ],
           ),
         ),
-      ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

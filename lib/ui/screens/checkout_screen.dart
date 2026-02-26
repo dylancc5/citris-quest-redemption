@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/typography.dart';
 import '../../widgets/common/svg_icon.dart';
@@ -38,6 +40,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String _selectedState = 'CA';
   bool _isProcessing = false;
+
+  static const _savedAddressKey = 'saved_shipping_address';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedAddress();
+  }
+
+  Future<void> _loadSavedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString(_savedAddressKey);
+    if (json == null) return;
+    try {
+      final address = ShippingAddress.fromJson(jsonDecode(json) as Map<String, dynamic>);
+      if (!mounted) return;
+      setState(() {
+        _firstNameController.text = address.firstName;
+        _lastNameController.text = address.lastName;
+        _addressLine1Controller.text = address.addressLine1;
+        _addressLine2Controller.text = address.addressLine2 ?? '';
+        _cityController.text = address.city;
+        _selectedState = address.state;
+        _zipCodeController.text = address.zipCode;
+        _phoneController.text = address.phoneNumber ?? '';
+      });
+    } catch (_) {
+      // Corrupted data — ignore and start fresh
+    }
+  }
+
+  Future<void> _saveAddress(ShippingAddress address) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_savedAddressKey, jsonEncode(address.toJson()));
+  }
 
   // US states
   static const _usStates = [
@@ -133,6 +170,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     setState(() => _isProcessing = true);
+    await _saveAddress(address);
 
     try {
       // Process order

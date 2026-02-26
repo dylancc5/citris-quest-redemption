@@ -9,6 +9,7 @@ import '../../backend/services/cart_service.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/balance_display.dart';
+import '../widgets/merch/merch_image_widget.dart';
 import '../widgets/navigation/merch_nav_bar.dart';
 import 'cart_screen.dart';
 import 'login_screen.dart';
@@ -17,8 +18,13 @@ import 'order_history_screen.dart';
 /// Item detail screen with two-panel layout and quantity selector
 class ItemDetailScreen extends StatefulWidget {
   final MerchItem item;
+  final List<String> imageUrls;
 
-  const ItemDetailScreen({super.key, required this.item});
+  const ItemDetailScreen({
+    super.key,
+    required this.item,
+    this.imageUrls = const [],
+  });
 
   @override
   State<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -175,10 +181,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       padding: EdgeInsets.all(isMobile ? 24 : 40),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Icon(
-          MerchConfig.getPlaceholderIcon(widget.item.id),
-          size: 120,
-          color: accentColor,
+        child: MerchImageWidget(
+          item: widget.item,
+          imageUrls: widget.imageUrls,
+          showCarousel: true,
+          iconSize: 120,
         ),
       ),
     );

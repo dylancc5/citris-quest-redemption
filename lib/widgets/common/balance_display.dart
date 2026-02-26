@@ -76,13 +76,10 @@ class BalanceDisplay extends StatelessWidget {
                 if (showXp) ...[
                   Icon(Icons.star, color: AppTheme.cyanAccent, size: _iconSize),
                   const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      '${_formatBalance(xp, abbreviate: _shouldAbbreviate)} XP',
-                      style: effectiveTextStyle.copyWith(
-                        color: AppTheme.cyanAccent,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    '${_formatBalance(xp, abbreviate: _shouldAbbreviate)} XP',
+                    style: effectiveTextStyle.copyWith(
+                      color: AppTheme.cyanAccent,
                     ),
                   ),
                 ],
@@ -91,13 +88,10 @@ class BalanceDisplay extends StatelessWidget {
                   Icon(Icons.monetization_on,
                       color: AppTheme.yellowPrimary, size: _iconSize),
                   const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      _formatBalance(coins, abbreviate: _shouldAbbreviate),
-                      style: effectiveTextStyle.copyWith(
-                        color: AppTheme.yellowPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    _formatBalance(coins, abbreviate: _shouldAbbreviate),
+                    style: effectiveTextStyle.copyWith(
+                      color: AppTheme.yellowPrimary,
                     ),
                   ),
                 ],

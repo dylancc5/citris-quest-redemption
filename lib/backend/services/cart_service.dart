@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models/cart_item.dart';
 import '../domain/models/merch_item.dart';
 
@@ -12,8 +14,29 @@ class CartService {
   factory CartService() => _instance;
   CartService._internal();
 
+  static const _cartKey = 'saved_cart';
+
   // Reactive state
   final ValueNotifier<List<CartItem>> cartItemsNotifier = ValueNotifier([]);
+
+  Future<void> loadSavedCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString(_cartKey);
+    if (json == null) return;
+    try {
+      final list = jsonDecode(json) as List<dynamic>;
+      cartItemsNotifier.value = list
+          .map((e) => CartItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      // Corrupted data — start with empty cart
+    }
+  }
+
+  Future<void> _persist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_cartKey, jsonEncode(items.map((e) => e.toJson()).toList()));
+  }
 
   // Getters
   List<CartItem> get items => cartItemsNotifier.value;
@@ -56,6 +79,7 @@ class CartService {
     }
 
     cartItemsNotifier.value = currentItems;
+    _persist();
     debugPrint('CartService: Added ${item.name} (size: $size) to cart');
   }
 
@@ -74,6 +98,7 @@ class CartService {
     if (index != -1) {
       currentItems[index] = currentItems[index].copyWith(quantity: quantity);
       cartItemsNotifier.value = currentItems;
+      _persist();
       debugPrint('CartService: Updated item $cartItemId quantity to $quantity');
     }
   }
@@ -83,12 +108,14 @@ class CartService {
     final currentItems = List<CartItem>.from(items);
     currentItems.removeWhere((item) => item.id == cartItemId);
     cartItemsNotifier.value = currentItems;
+    _persist();
     debugPrint('CartService: Removed item $cartItemId from cart');
   }
 
   /// Clear all items from cart
   void clear() {
     cartItemsNotifier.value = [];
+    _persist();
     debugPrint('CartService: Cart cleared');
   }
 
