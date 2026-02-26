@@ -59,7 +59,7 @@ class MerchItemsService {
           .from('merch_items')
           .select()
           .eq('is_active', true)
-          .order('sort_order', ascending: true);
+          .order('coin_price', ascending: true);
 
       _items = (response as List<dynamic>)
           .map((json) => MerchItem.fromJson(json as Map<String, dynamic>))

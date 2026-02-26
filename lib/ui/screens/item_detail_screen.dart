@@ -169,25 +169,37 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   Widget _buildProductImage(Color accentColor) {
     final isMobile = Breakpoints.isMobile(context);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppTheme.cardBackgroundGradient,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 2),
-        boxShadow: [
-          BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2),
-        ],
-      ),
-      padding: EdgeInsets.all(isMobile ? 24 : 40),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: MerchImageWidget(
-          item: widget.item,
-          imageUrls: widget.imageUrls,
-          showCarousel: true,
-          iconSize: 120,
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            gradient: AppTheme.cardBackgroundGradient,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 2),
+            boxShadow: [
+              BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              height: isMobile ? 320 : 400,
+              child: MerchImageWidget(
+                item: widget.item,
+                imageUrls: widget.imageUrls,
+                showCarousel: true,
+                iconSize: 120,
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 6),
+        const Text(
+          'Tap image to view full screen',
+          style: TextStyle(color: Colors.white38, fontSize: 11, letterSpacing: 0.3),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 

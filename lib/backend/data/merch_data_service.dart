@@ -24,7 +24,7 @@ class MerchDataService {
           .from('asset_metadata')
           .select('asset_key, public_url')
           .like('asset_key', 'merch_images/%')
-          .order('asset_key');
+          .order('asset_key', ascending: true);
 
       final result = <String, List<String>>{};
 

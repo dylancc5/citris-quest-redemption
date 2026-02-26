@@ -60,16 +60,12 @@ class MerchItemCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image/Icon area — fixed height
-              SizedBox(
-                height: 140,
+              // Image/Icon area — white background to match product photo backgrounds
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundSecondary.withValues(alpha: 0.5),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10),
-                    ),
-                  ),
+                  height: 180,
+                  color: Colors.white,
                   child: MerchImageWidget(
                     item: item,
                     imageUrls: imageUrls,

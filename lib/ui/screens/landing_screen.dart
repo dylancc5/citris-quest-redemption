@@ -6,6 +6,7 @@ import '../../core/breakpoints.dart';
 import '../../core/constants/merch_config.dart';
 import '../../backend/data/auth_service.dart';
 import '../../backend/data/merch_items_service.dart';
+import '../../backend/data/merch_data_service.dart';
 import '../../backend/domain/models/merch_item.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/primary_button.dart';
@@ -29,6 +30,8 @@ class _LandingScreenState extends State<LandingScreen>
   final _scrollController = ScrollController();
   late AnimationController _floatController;
   late Animation<double> _floatAnimation;
+  Map<String, List<String>> _merchImageUrls = const {};
+  bool _isLoadingImages = false;
 
   @override
   void initState() {
@@ -41,6 +44,10 @@ class _LandingScreenState extends State<LandingScreen>
     _floatAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
+
+    // Kick off initial merch data load: items and associated image URLs.
+    MerchItemsService().initialize();
+    _loadMerchImages();
   }
 
   @override
@@ -48,6 +55,18 @@ class _LandingScreenState extends State<LandingScreen>
     _scrollController.dispose();
     _floatController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMerchImages() async {
+    setState(() {
+      _isLoadingImages = true;
+    });
+    final urls = await MerchDataService().fetchMerchImageUrls();
+    if (!mounted) return;
+    setState(() {
+      _merchImageUrls = urls;
+      _isLoadingImages = false;
+    });
   }
 
   @override
@@ -360,6 +379,31 @@ class _LandingScreenState extends State<LandingScreen>
         ),
         const SizedBox(height: 16),
         _buildXpGateBanner(context),
+        if (_isLoadingImages)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppTheme.cyanAccent.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Loading product photos...',
+                  style: AppTypography.caption2(context).copyWith(
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ValueListenableBuilder<bool>(
           valueListenable: MerchItemsService().isLoadingNotifier,
           builder: (context, isLoading, _) {
@@ -382,11 +426,15 @@ class _LandingScreenState extends State<LandingScreen>
                       spacing: spacing,
                       runSpacing: spacing,
                       children: items.map((item) {
+                        final imageUrls = _merchImageUrls[item.id] ?? const [];
                         return SizedBox(
                           width: cardWidth == double.infinity
                               ? double.infinity
                               : cardWidth,
-                          child: MerchItemCard(item: item),
+                          child: MerchItemCard(
+                            item: item,
+                            imageUrls: imageUrls,
+                          ),
                         );
                       }).toList(),
                     );
@@ -459,7 +507,10 @@ class _LandingScreenState extends State<LandingScreen>
           const SizedBox(height: 16),
           PrimaryButton(
             text: 'Retry',
-            onPressed: () => MerchItemsService().refreshItems(),
+            onPressed: () {
+              MerchItemsService().refreshItems();
+              _loadMerchImages();
+            },
             borderColor: AppTheme.cyanAccent,
             textColor: AppTheme.cyanAccent,
             width: 160,
