@@ -18,7 +18,7 @@ class MerchItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = MerchConfig.getAccentColor(item.id);
+    final accentColor = item.accentColor;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -57,11 +57,26 @@ class MerchItemCard extends StatelessWidget {
                       top: Radius.circular(10),
                     ),
                   ),
-                  child: Icon(
-                    MerchConfig.getPlaceholderIcon(item.id),
-                    size: 60,
-                    color: accentColor,
-                  ),
+                  child: item.imageUrl != null
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(10),
+                          ),
+                          child: Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(
+                              item.placeholderIcon,
+                              size: 60,
+                              color: accentColor,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          item.placeholderIcon,
+                          size: 60,
+                          color: accentColor,
+                        ),
                 ),
               ),
 

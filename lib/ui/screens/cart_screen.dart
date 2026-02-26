@@ -386,7 +386,7 @@ class _CartItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    MerchConfig.getPlaceholderIcon(cartItem.item.id),
+                    cartItem.item.placeholderIcon,
                     color: AppTheme.bluePrimary,
                     size: iconSize,
                   ),

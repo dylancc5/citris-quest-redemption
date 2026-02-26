@@ -104,9 +104,8 @@ class OrderProcessingService {
       await _printifyService.cancelOrder(printifyOrderId);
 
       return OrderResult.failure(
-        'Failed to process payment. Your coins have NOT been deducted.\n\n'
-        'This may be due to concurrent purchases or insufficient balance. '
-        'Please try again.',
+        'We hit a snag processing your order. No coins were deducted — '
+        'please try again!',
       );
     }
 
@@ -145,10 +144,9 @@ class OrderProcessingService {
       await _printifyService.cancelOrder(printifyOrderId);
 
       return OrderResult.failure(
-        'Order processing error. Please contact support with this reference:\n\n'
-        'Order ID: ${order.id}\n'
-        'Printify Order: $printifyOrderId\n\n'
-        'We have attempted to refund your coins.',
+        'Something went wrong on our end while saving your order. '
+        'We\'ve attempted to refund your coins — if your balance looks off, '
+        'contact support with reference: ${order.id.substring(0, 8).toUpperCase()}',
       );
     }
 

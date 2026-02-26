@@ -98,7 +98,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = MerchConfig.getAccentColor(widget.item.id);
+    final accentColor = widget.item.accentColor;
     final isMobile = Breakpoints.isMobile(context);
 
     return Scaffold(
@@ -175,11 +175,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       padding: EdgeInsets.all(isMobile ? 24 : 40),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Icon(
-          MerchConfig.getPlaceholderIcon(widget.item.id),
-          size: 120,
-          color: accentColor,
-        ),
+        child: widget.item.imageUrl != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  widget.item.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Icon(
+                    widget.item.placeholderIcon,
+                    size: 120,
+                    color: accentColor,
+                  ),
+                ),
+              )
+            : Icon(
+                widget.item.placeholderIcon,
+                size: 120,
+                color: accentColor,
+              ),
       ),
     );
   }

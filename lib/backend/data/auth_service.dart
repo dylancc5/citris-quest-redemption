@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -62,7 +63,9 @@ class AuthService {
   /// 1. Fetch email from username via RPC
   /// 2. Sign in with email and password
   /// 3. Load and cache user profile
-  Future<bool> login(String username, String password) async {
+  ///
+  /// Returns null on success, or a user-friendly error message on failure.
+  Future<String?> login(String username, String password) async {
     try {
       // Step 1: Get email from username
       final emailResponse = await _supabase.rpc(
@@ -71,7 +74,8 @@ class AuthService {
       );
 
       if (emailResponse == null) {
-        throw Exception('Username not found');
+        return "Hmm, we don't recognize that username. "
+            "Double-check the one in your CITRIS Quest app.";
       }
 
       final email = emailResponse as String;
@@ -83,17 +87,24 @@ class AuthService {
       );
 
       if (authResponse.user == null) {
-        throw Exception('Authentication failed');
+        return "That password doesn't look right. Give it another shot!";
       }
 
       // Step 3: Load user profile
       await _loadUserProfile(authResponse.user!.id);
 
       isLoggedInNotifier.value = true;
-      return true;
+      return null; // success
+    } on AuthException catch (e) {
+      debugPrint('AuthService: Auth error: $e');
+      return "That password doesn't look right. Give it another shot!";
+    } on SocketException catch (e) {
+      debugPrint('AuthService: Network error: $e');
+      return "Couldn't reach our servers right now. "
+          "Check your connection and try again!";
     } catch (e) {
       debugPrint('AuthService: Login failed: $e');
-      return false;
+      return "Something went wrong. Please try again in a moment.";
     }
   }
 

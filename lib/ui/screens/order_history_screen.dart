@@ -59,7 +59,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load orders';
+          _errorMessage =
+              "Hmm, we couldn't load your orders right now. Give it another try!";
         });
       }
     }
@@ -87,16 +88,35 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     if (_errorMessage != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 60, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              style: AppTypography.title2(context).copyWith(color: Colors.red),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: AppTypography.title2(context).copyWith(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _errorMessage = null;
+                  });
+                  _loadOrders();
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try Again'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.cyanAccent,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

@@ -158,7 +158,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isProcessing = false);
-      _showErrorDialog('An unexpected error occurred. Please try again.');
+      _showErrorDialog(
+        'Hmm, something unexpected happened. Your coins should not have been '
+        'deducted — please try again, or contact support if the issue persists.',
+      );
     }
   }
 

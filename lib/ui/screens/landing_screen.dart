@@ -3,8 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/typography.dart';
 import '../../core/breakpoints.dart';
-import '../../core/constants/merch_config.dart';
+import '../../backend/data/merch_items_service.dart';
 import '../../backend/data/auth_service.dart';
+import '../../backend/domain/models/merch_item.dart';
 import '../../widgets/common/animated_starfield.dart';
 import '../../widgets/common/balance_display.dart';
 import '../../widgets/common/primary_button.dart';
@@ -40,6 +41,11 @@ class _LandingScreenState extends State<LandingScreen>
     _floatAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
+
+    // Ensure merch items are loaded
+    if (!MerchItemsService().hasFetched) {
+      MerchItemsService().initialize();
+    }
   }
 
   @override
@@ -372,21 +378,150 @@ class _LandingScreenState extends State<LandingScreen>
           ),
         ),
         const SizedBox(height: 16),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: Breakpoints.cardSpacing(context),
-            mainAxisSpacing: Breakpoints.cardSpacing(context),
-            childAspectRatio: childAspectRatio,
-          ),
-          itemCount: MerchConfig.items.length,
-          itemBuilder: (context, index) {
-            return MerchItemCard(item: MerchConfig.items[index]);
+        ValueListenableBuilder<bool>(
+          valueListenable: MerchItemsService().isLoadingNotifier,
+          builder: (context, isLoading, _) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: MerchItemsService().errorNotifier,
+              builder: (context, error, _) {
+                return ValueListenableBuilder<List<MerchItem>>(
+                  valueListenable: MerchItemsService().itemsNotifier,
+                  builder: (context, items, _) {
+                    // Loading state
+                    if (isLoading && items.isEmpty) {
+                      return _buildLoadingGrid(crossAxisCount, childAspectRatio);
+                    }
+
+                    // Error state
+                    if (error != null && items.isEmpty) {
+                      return _buildErrorState(context, error);
+                    }
+
+                    // Empty state
+                    if (items.isEmpty) {
+                      return _buildEmptyState(context);
+                    }
+
+                    // Items grid
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: Breakpoints.cardSpacing(context),
+                        mainAxisSpacing: Breakpoints.cardSpacing(context),
+                        childAspectRatio: childAspectRatio,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return MerchItemCard(item: items[index]);
+                      },
+                    );
+                  },
+                );
+              },
+            );
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildLoadingGrid(int crossAxisCount, double childAspectRatio) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: Breakpoints.cardSpacing(context),
+        mainAxisSpacing: Breakpoints.cardSpacing(context),
+        childAspectRatio: childAspectRatio,
+      ),
+      itemCount: 4,
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: AppTheme.cardBackgroundGradient,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.cyanAccent.withValues(alpha: 0.15),
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(
+                  AppTheme.cyanAccent.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, String error) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: AppTheme.cardBackgroundGradient,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.redPrimary.withValues(alpha: 0.3),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, color: AppTheme.redPrimary, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            error,
+            style: AppTypography.body(context).copyWith(color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          PrimaryButton(
+            text: 'Retry',
+            onPressed: () => MerchItemsService().refreshItems(),
+            borderColor: AppTheme.cyanAccent,
+            textColor: AppTheme.cyanAccent,
+            width: 160,
+            height: 44,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: AppTheme.cardBackgroundGradient,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.cyanAccent.withValues(alpha: 0.2),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.shopping_bag_outlined,
+              color: Colors.white38, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            'No merch available right now.\nCheck back soon!',
+            style: AppTypography.body(context).copyWith(color: Colors.white54),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
